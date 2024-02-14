@@ -80,15 +80,11 @@ commands=(
     ["断开ADB"]="disconnect_adb"
     ["一键修改NTP服务器地址"]="modify_ntp"
     ["安装订阅助手"]="install_subhelper_apk"
-    ["安装Emotn Store应用商店"]="000"
-    ["安装当贝市场"]="000"
-    ["向TV端输入文字(限英文)"]="000"
-    ["显示Netflix影片码率"]="000"
+    ["安装Emotn Store应用商店"]="install_emotn_store"
+    ["安装当贝市场"]="install_dbmarket"
+    ["向TV端输入文字(限英文)"]="input_text"
+    ["显示Netflix影片码率"]="show_nf_info"
 )
-
-
-
-
 
 show_user_tips() {
     read -p "按 Enter 键继续..."
@@ -189,17 +185,74 @@ disconnect_adb() {
 
 # 安装订阅助手
 install_subhelper_apk() {
-    wget -O subhelper.apk https://github.com/wukongdaily/tvhelper/raw/master/apks/subhelp14.apk
+    wget -O /tmp/subhelper.apk https://github.com/wukongdaily/tvhelper/raw/master/apks/subhelp14.apk
     if check_adb_connected; then
         # 使用 adb install 命令安装 APK，并捕获输出
         echo "正在推送和安装apk 请耐心等待..."
-        install_result=$(adb install subhelper.apk 2>&1)
+        install_result=$(adb install /tmp/subhelper.apk 2>&1)
         # 检查输出中是否包含 "Success"
         if [[ $install_result == *"Success"* ]]; then
             echo "订阅助手 安装成功！"
         else
             echo "APK 安装失败：$install_result"
         fi
+        rm -rf /tmp/subhelper.apk
+    else
+        connect_adb
+    fi
+}
+
+install_emotn_store() {
+    wget -O /tmp/emotn.apk "https://app.keeflys.com/20220107/com.overseas.store.appstore_1.0.40_a973.apk"
+    if check_adb_connected; then
+        # 使用 adb install 命令安装 APK，并捕获输出
+        echo "正在推送和安装apk 请耐心等待..."
+        install_result=$(adb install -r /tmp/emotn.apk 2>&1)
+        # 检查输出中是否包含 "Success"
+        if [[ $install_result == *"Success"* ]]; then
+            echo "Emotn Store 安装成功！"
+        else
+            echo "APK 安装失败：$install_result"
+        fi
+        rm -rf /tmp/emotn.apk
+    else
+        connect_adb
+    fi
+}
+
+# 安装当贝市场
+install_dbmarket() {
+    wget -O /tmp/dangbeimarket.apk "https://webapk.dangbei.net/update/dangbeimarket.apk"
+    if check_adb_connected; then
+        # 使用 adb install 命令安装 APK，并捕获输出
+        echo "正在推送和安装apk 请耐心等待..."
+        install_result=$(adb install -r /tmp/dangbeimarket.apk 2>&1)
+        # 检查输出中是否包含 "Success"
+        if [[ $install_result == *"Success"* ]]; then
+            echo "当贝市场 安装成功！"
+        else
+            echo "APK 安装失败：$install_result"
+        fi
+        rm -rf /tmp/dangbeimarket.apk
+    else
+        connect_adb
+    fi
+}
+
+show_nf_info() {
+    if check_adb_connected; then
+        adb shell input keyevent KEYCODE_F8
+    else
+        connect_adb
+    fi
+}
+
+# 向电视盒子输入英文
+input_text() {
+    if check_adb_connected; then
+        echo "请输入英文或数字"
+        read str
+        adb shell input text ${str}
     else
         connect_adb
     fi
@@ -236,7 +289,7 @@ handle_choice() {
     "${commands[${menu_options[$choice - 1]}]}"
 }
 
-show_menu(){
+show_menu() {
     clear
     echo "***********************************************************************"
     echo "*      遥控助手OpenWrt版 v1.0脚本        "
@@ -254,7 +307,6 @@ show_menu(){
     done
 }
 
-
 while true; do
     show_menu
     read -p "请输入选项的序号(输入q退出): " choice
@@ -265,7 +317,3 @@ while true; do
     echo "按任意键继续..."
     read -n 1 # 等待用户按键
 done
-
-
-
-
