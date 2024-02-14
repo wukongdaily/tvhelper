@@ -52,45 +52,43 @@ show_poweroff_tips() {
 
 #********************************************************
 
-# 分页大小，表示每页显示的菜单选项数量
-PAGE_SIZE=6
-# 当前页数
-current_page=1
+# 定义红色文本
+RED='\033[0;31m'
+# 无颜色
+NC='\033[0m'
+GREEN='\033[0;32m'
+YELLOW="\e[33m"
+
 # 菜单选项数组
+declare -a menu_options
+declare -A commands
 menu_options=(
     "安装ADB"
     "连接ADB"
+    "断开ADB"
     "一键修改NTP服务器地址"
     "安装订阅助手"
     "安装Emotn Store应用商店"
+    "安装当贝市场"
     "向TV端输入文字(限英文)"
     "显示Netflix影片码率"
-    "等待开发7"
-    "等待开发8"
-    "等待开发9"
-    "等待开发10"
-    "等待开发11"
-    "等待开发12"
-    "等待开发13"
-    "等待开发14"
-    "等待开发15"
-    "等待开发16"
 )
 
-# 计算总页数
-total_pages=$(((${#menu_options[@]} + PAGE_SIZE - 1) / PAGE_SIZE))
+commands=(
+    ["安装ADB"]="install_adb"
+    ["连接ADB"]="connect_adb"
+    ["断开ADB"]="disconnect_adb"
+    ["一键修改NTP服务器地址"]="modify_ntp"
+    ["安装订阅助手"]="install_subhelper_apk"
+    ["安装Emotn Store应用商店"]="000"
+    ["安装当贝市场"]="000"
+    ["向TV端输入文字(限英文)"]="000"
+    ["显示Netflix影片码率"]="000"
+)
 
-# 显示菜单
-show_menu_page() {
-    local start=$((PAGE_SIZE * (current_page - 1)))
-    local end=$((start + PAGE_SIZE - 1))
 
-    for ((i = start; i <= end; i++)); do
-        if [ $i -lt ${#menu_options[@]} ]; then
-            echo "$((i + 1)). ${menu_options[i]}"
-        fi
-    done
-}
+
+
 
 show_user_tips() {
     read -p "按 Enter 键继续..."
@@ -114,11 +112,25 @@ check_adb_installed() {
     fi
 }
 
+# 判断adb是否连接成功
+check_adb_connected() {
+    local devices=$(adb devices | awk 'NR>1 {print $1}' | grep -v '^$')
+    # 检查是否有设备连接
+    if [[ -n $devices ]]; then
+        #adb已连接
+        echo "$devices 已连接"
+        return 0
+    else
+        #adb未连接
+        echo "没有检测到已连接的设备。请先连接ADB"
+        return 1
+    fi
+}
 # 安装adb工具
 install_adb() {
     # 调用函数并根据返回值判断
     if check_adb_installed; then
-        echo "ADB 已安装,您可以执行连接ADB了。"
+        echo "adb is ready"
     else
         echo "正在尝试安装adb"
         opkg update
@@ -128,25 +140,23 @@ install_adb() {
 
 # 连接adb
 connect_adb() {
-    if check_adb_installed; then
-        echo "OK"
-    else
-        echo "正在尝试安装adb"
-        opkg update
-        opkg install adb
-    fi
+    install_adb
     # 动态获取网关地址
     gateway_ip=$(ip a show br-lan | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1)
     # 提取网关IP地址的前缀，假设网关IP是192.168.66.1，则需要提取192.168.66.
     gateway_prefix=$(echo $gateway_ip | sed 's/\.[0-9]*$//').
 
-    echo "请输入电视盒子的ip地址(${gateway_prefix})的最后一段"
+    echo "请输入电视盒子的ip地址(${gateway_prefix})的最后一段数字"
     read end_number
     if is_integer "$end_number"; then
         # 使用动态获取的网关前缀
         ip=${gateway_prefix}${end_number}
-        echo "您输入的地址为${ip},正在连接盒子,请在盒子上点击 允许 按钮"
+        echo -e "正在尝试连接ip地址为${ip}的电视盒子\n若首次使用或者还未授权USB调试\n请在盒子的提示弹框上点击 允许 按钮"
+        adb disconnect
         adb connect ${ip}
+        # 尝试通过 adb shell 回显一个字符串来验证连接
+        sleep 2
+        adb shell echo "ADB has successfully connected"
     else
         echo "错误: 请输入整数."
     fi
@@ -156,129 +166,106 @@ connect_adb() {
 modify_ntp() {
     # 获取连接的设备列表
     local devices=$(adb devices | awk 'NR>1 {print $1}' | grep -v '^$')
-    
+
     # 检查是否有设备连接
     if [[ -n $devices ]]; then
         echo "已连接的设备：$devices"
         # 对每个已连接的设备执行操作
         for device in $devices; do
-            echo "正在修改设备 $device 的NTP服务器为ntp3.aliyun.com"
             adb -s $device shell settings put global ntp_server ntp3.aliyun.com
+            echo "NTP服务器已经成功修改为 ntp3.aliyun.com"
         done
     else
         echo "没有检测到已连接的设备。请先连接ADB"
     fi
 }
 
+#断开adb连接
+disconnect_adb() {
+    install_adb
+    adb disconnect
+    echo "ADB 已经断开"
+}
 
-while true; do
+# 安装订阅助手
+install_subhelper_apk() {
+    wget -O subhelper.apk https://github.com/wukongdaily/tvhelper/raw/master/apks/subhelp14.apk
+    if check_adb_connected; then
+        # 使用 adb install 命令安装 APK，并捕获输出
+        echo "正在推送和安装apk 请耐心等待..."
+        install_result=$(adb install subhelper.apk 2>&1)
+        # 检查输出中是否包含 "Success"
+        if [[ $install_result == *"Success"* ]]; then
+            echo "订阅助手 安装成功！"
+        else
+            echo "APK 安装失败：$install_result"
+        fi
+    else
+        connect_adb
+    fi
+}
+
+
+handle_choice() {
+    local choice=$1
+    # 检查输入是否为空
+    if [[ -z $choice ]]; then
+        echo -e "${RED}输入不能为空，请重新选择。${NC}"
+        return
+    fi
+
+    # 检查输入是否为数字
+    if ! [[ $choice =~ ^[0-9]+$ ]]; then
+        echo -e "${RED}请输入有效数字!${NC}"
+        return
+    fi
+
+    # 检查数字是否在有效范围内
+    if [[ $choice -lt 1 ]] || [[ $choice -gt ${#menu_options[@]} ]]; then
+        echo -e "${RED}选项超出范围!${NC}"
+        echo -e "${YELLOW}请输入 1 到 ${#menu_options[@]} 之间的数字。${NC}"
+        return
+    fi
+
+    # 执行命令
+    if [ -z "${commands[${menu_options[$choice - 1]}]}" ]; then
+        echo -e "${RED}无效选项，请重新选择。${NC}"
+        return
+    fi
+
+    "${commands[${menu_options[$choice - 1]}]}"
+}
+
+show_menu(){
     clear
-    execute_once
     echo "***********************************************************************"
     echo "*      遥控助手OpenWrt版 v1.0脚本        "
     echo "*      自动识别CPU架构 x86_64/Arm 均可使用         "
-     echo "*     请确保电视盒子和软路由同一网段且电视盒子开启了USB调试模式(adb开关)         "
+    echo -e "*      请确保电视盒子和OpenWrt路由器处于同一网段\n*      且电视盒子开启了USB调试模式(adb开关)         "
     echo "*      Developed by @wukongdaily        "
     echo "**********************************************************************"
     echo
     echo "*      当前的软路由型号: $(get_router_name)"
     echo
     echo "**********************************************************************"
-    echo
-    show_menu_page
-    echo
-    echo "***********************************************************************"
-    echo "N: 下一页  B: 上一页  Q: 退出  R: 重启  P: 关机  第$current_page""页 / 总页数$total_pages"
-    echo "***********************************************************************"
-    echo
-    read -p "请选择一个选项 (N/B/Q/R/P 不分大小写) : " choice
+    echo "请选择操作："
+    for i in "${!menu_options[@]}"; do
+        echo "$((i + 1)). ${menu_options[i]}"
+    done
+}
 
-    case $choice in
 
-    1)
-        #安装ADB
-        install_adb
-        show_user_tips
-        ;;
-    2)
-        #连接ADB
-        connect_adb
-        show_user_tips
-        ;;
-    3)
-        #一键修改NTP服务器地址
-        modify_ntp
-        show_user_tips
-        ;;
-
-    4)
-        show_user_tips
-        ;;
-    5)
-        show_user_tips
-        ;;
-    6)
-        echo
-        show_user_tips
-        ;;
-    7)
-        echo
-        show_user_tips
-        ;;
-    8)
-        echo
-        show_user_tips
-        ;;
-    9)
-        echo
-        show_user_tips
-        ;;
-    10)
-        echo
-        show_user_tips
-        show_reboot_tips
-        ;;
-    11)
-        echo
-        show_user_tips
-        ;;
-    [Nn])
-        # 切换到下一页
-        if [ $current_page -lt $total_pages ]; then
-            current_page=$((current_page + 1))
-        else
-            echo
-            echo "已经是最后一页了。"
-            echo
-            show_user_tips
-        fi
-        ;;
-    [Bb])
-        # 切换到上一页
-        if [ $current_page -gt 1 ]; then
-            current_page=$((current_page - 1))
-        else
-            echo
-            echo "已经是第一页了。"
-            echo
-            show_user_tips
-        fi
-        ;;
-    [Qq])
-        echo
-        echo "您已退出,欢迎下次再来"
-        exit 0
-        ;;
-    [Rr])
-        echo
-        show_reboot_tips
-        ;;
-    [Pp])
-        echo
-        show_poweroff_tips
-        ;;
-    *)
-        echo "无效选项，请重新选择。"
-        ;;
-    esac
+while true; do
+    show_menu
+    read -p "请输入选项的序号(输入q退出): " choice
+    if [[ $choice == 'q' ]]; then
+        break
+    fi
+    handle_choice $choice
+    echo "按任意键继续..."
+    read -n 1 # 等待用户按键
 done
+
+
+
+
