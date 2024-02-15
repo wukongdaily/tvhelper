@@ -1,4 +1,5 @@
 # Gradle files
+.DS_Store
 .gradle/
 build/
 

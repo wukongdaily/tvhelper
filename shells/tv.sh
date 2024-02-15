@@ -73,6 +73,7 @@ menu_options=(
     "向TV端输入文字(限英文)"
     "安装Emotn Store应用商店"
     "安装当贝市场"
+    "安装my-tv最新版(lizongying)"
     "为Google TV系统安装Play商店图标"
     "显示Netflix影片码率"
 )
@@ -89,7 +90,9 @@ commands=(
     ["显示Netflix影片码率"]="show_nf_info"
     ["为Google TV系统安装Play商店图标"]="show_playstore_icon"
     ["给软路由添加主机名映射(自定义劫持域名)"]="add_dhcp_domain"
-    
+    ["添加ADB防火墙规则"]="add_adb_firewall_rule"
+    ["安装my-tv最新版(lizongying)"]="download_latest_apk"
+
 )
 
 show_user_tips() {
@@ -111,6 +114,23 @@ check_adb_installed() {
         return 0 # 表示 adb 已安装
     else
         return 1 # 表示 adb 未安装
+    fi
+}
+
+# 定义一个函数来添加ADB防火墙规则
+add_adb_firewall_rule() {
+    # 定义要添加的规则
+    ADB_RULE="iptables -I INPUT -p tcp --dport 5555 -j ACCEPT"
+    # 检查 /etc/firewall.user 是否已经包含了这条规则
+    if grep -qF -- "$ADB_RULE" /etc/firewall.user; then
+        echo "ADB规则已存在于 /etc/firewall.user 中。"
+    else
+        # 如果规则不存在，就添加它
+        echo "$ADB_RULE" >>/etc/firewall.user
+        echo "ADB规则已添加到 /etc/firewall.user。"
+
+        # 重启防火墙使规则生效
+        /etc/init.d/firewall restart
     fi
 }
 
@@ -175,12 +195,16 @@ modify_ntp() {
         # 对每个已连接的设备执行操作
         for device in $devices; do
             adb -s $device shell settings put global ntp_server ntp3.aliyun.com
-            echo "NTP服务器已经成功修改为 ntp3.aliyun.com"
+            echo -e "NTP服务器已经成功修改为 ntp3.aliyun.com"
+            echo -e "${RED}正在重启您的电视盒子或者电视机,请稍后.......${NC}"
+            adb -s $device shell reboot &
         done
     else
         echo "没有检测到已连接的设备。请先连接ADB"
     fi
 }
+
+
 
 #断开adb连接
 disconnect_adb() {
@@ -199,9 +223,9 @@ install_subhelper_apk() {
         install_result=$(adb install /tmp/subhelper.apk 2>&1)
         # 检查输出中是否包含 "Success"
         if [[ $install_result == *"Success"* ]]; then
-            echo "订阅助手 安装成功！"
+            echo -e "${GREEN}订阅助手 安装成功！${NC}"
         else
-            echo "APK 安装失败：$install_result"
+            echo -e "${RED}APK 安装失败：$install_result ${NC}"
         fi
         rm -rf /tmp/subhelper.apk
     else
@@ -217,9 +241,9 @@ install_emotn_store() {
         install_result=$(adb install -r /tmp/emotn.apk 2>&1)
         # 检查输出中是否包含 "Success"
         if [[ $install_result == *"Success"* ]]; then
-            echo "Emotn Store 安装成功！"
+            echo -e "${GREEN}Emotn Store 安装成功！${NC}"
         else
-            echo "APK 安装失败：$install_result"
+            echo -e "${RED}APK 安装失败：$install_result ${NC}"
         fi
         rm -rf /tmp/emotn.apk
     else
@@ -232,13 +256,14 @@ install_dbmarket() {
     wget -O /tmp/dangbeimarket.apk "https://webapk.dangbei.net/update/dangbeimarket.apk"
     if check_adb_connected; then
         # 使用 adb install 命令安装 APK，并捕获输出
+        adb uninstall com.dangbeimarket
         echo "正在推送和安装apk 请耐心等待..."
         install_result=$(adb install -r /tmp/dangbeimarket.apk 2>&1)
         # 检查输出中是否包含 "Success"
         if [[ $install_result == *"Success"* ]]; then
-            echo "当贝市场 安装成功！"
+            echo -e "${GREEN}当贝市场 安装成功！${NC}"
         else
-            echo "APK 安装失败：$install_result"
+            echo -e "${RED}APK 安装失败：$install_result ${NC}"
         fi
         rm -rf /tmp/dangbeimarket.apk
     else
@@ -249,7 +274,7 @@ install_dbmarket() {
 #这个apk 用于google tv系统。因为google tv系统在首页并不会显示自家的谷歌商店图标。
 #当然可以在系统设置——应用里找到，但是不太方便。因此我制作了它的图标。
 #它的作用就是显示在首页，当你点击后，就自然的进入google play商店里面。
-show_playstore_icon(){
+show_playstore_icon() {
     wget -O /tmp/play-icon.apk https://github.com/wukongdaily/tvhelper/raw/master/apks/play-icon.apk
     if check_adb_connected; then
         # 使用 adb install 命令安装 APK，并捕获输出
@@ -257,9 +282,9 @@ show_playstore_icon(){
         install_result=$(adb install /tmp/play-icon.apk 2>&1)
         # 检查输出中是否包含 "Success"
         if [[ $install_result == *"Success"* ]]; then
-            echo "play商店图标 安装成功！你可以在全部应用里找到"
+            echo -e "${GREEN}play商店图标 安装成功！你可以在全部应用里找到${NC}"
         else
-            echo "APK 安装失败：$install_result"
+            echo -e "${RED}APK 安装失败：$install_result ${NC}"
         fi
         rm -rf /tmp/play-icon.apk
     else
@@ -269,27 +294,26 @@ show_playstore_icon(){
 
 # 添加主机名映射(解决安卓原生TV首次连不上wifi的问题)
 add_dhcp_domain() {
-	local domain_name="time.android.com"
-	local domain_ip="203.107.6.88"
+    local domain_name="time.android.com"
+    local domain_ip="203.107.6.88"
 
-	# 检查是否存在相同的域名记录
-	existing_records=$(uci show dhcp | grep "dhcp.@domain\[[0-9]\+\].name='$domain_name'")
-	if [ -z "$existing_records" ]; then
-		# 添加新的域名记录
-		uci add dhcp domain
-		uci set "dhcp.@domain[-1].name=$domain_name"
-		uci set "dhcp.@domain[-1].ip=$domain_ip"
-		uci commit dhcp
-		echo
-		echo "已添加新的域名记录"
-	else
-		echo "相同的域名记录已存在，无需重复添加"
-	fi
-	echo -e "\n"
-	echo -e "time.android.com    203.107.6.88 "
+    # 检查是否存在相同的域名记录
+    existing_records=$(uci show dhcp | grep "dhcp.@domain\[[0-9]\+\].name='$domain_name'")
+    if [ -z "$existing_records" ]; then
+        # 添加新的域名记录
+        uci add dhcp domain
+        uci set "dhcp.@domain[-1].name=$domain_name"
+        uci set "dhcp.@domain[-1].ip=$domain_ip"
+        uci commit dhcp
+        echo
+        echo "已添加新的域名记录"
+    else
+        echo "相同的域名记录已存在，无需重复添加"
+    fi
+    echo -e "\n"
+    echo -e "time.android.com    203.107.6.88 "
     echo -e "它的作用在于:解决安卓原生TV首次使用连不上wifi的问题"
 }
-
 
 show_nf_info() {
     if check_adb_connected; then
@@ -310,7 +334,46 @@ input_text() {
     fi
 }
 
+#下载最新版我的电视
+# https://github.com/lizongying/my-tv/releases
+download_latest_apk() {
+    local api_url="https://api.github.com/repos/lizongying/my-tv/releases/latest"
+    apk_url=$(curl -s $api_url | grep "browser_download_url.*apk" | cut -d '"' -f 4)
 
+    if [ -z "$apk_url" ]; then
+        echo "APK download URL could not be found."
+        return 1
+    fi
+    # Extract the filename from the URL
+    local filename=$(basename $apk_url)
+    echo "已获取最新版下载地址:$apk_url"
+    # Use curl to download the APK file and save it to /tmp directory
+    echo -e "${GREEN}Downloading APK to /tmp/$filename ... ${NC}"
+    curl -L $apk_url -o /tmp/$filename
+
+    if [ $? -eq 0 ]; then
+        echo -e "${GREEN}APK downloaded successfully to /tmp/$filename. ${NC}"
+        if check_adb_connected; then
+            # 使用 adb install 命令安装 APK，并捕获输出
+            echo -e "${GREEN}正在安装$filename........${NC}"
+            install_result=$(adb install -r /tmp/$filename 2>&1)
+            # 检查输出中是否包含 "Success"
+            if [[ $install_result == *"Success"* ]]; then
+                echo -e "${GREEN}my-tv 安装成功！你可以在全部应用里找到${NC}"
+            else
+                echo -e "${RED}APK 安装失败：$install_result ${NC}"
+            fi
+            rm -rf /tmp/$filename
+        else
+            connect_adb
+        fi
+    else
+        echo "Failed to download APK."
+        return 1
+    fi
+}
+
+# 处理菜单
 handle_choice() {
     local choice=$1
     # 检查输入是否为空
