@@ -1,5 +1,6 @@
 #!/bin/bash
 # 全局变量来标记是否已经执行一次性操作
+# wget -O tv.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/tv.sh && chmod +x tv.sh && ./tv.sh
 executed_once=0
 # 定义只执行一次的操作
 execute_once() {
@@ -66,11 +67,13 @@ menu_options=(
     "安装ADB"
     "连接ADB"
     "断开ADB"
+    "给软路由添加主机名映射(自定义劫持域名)"
     "一键修改NTP服务器地址"
     "安装订阅助手"
+    "向TV端输入文字(限英文)"
     "安装Emotn Store应用商店"
     "安装当贝市场"
-    "向TV端输入文字(限英文)"
+    "为Google TV系统安装Play商店图标"
     "显示Netflix影片码率"
 )
 
@@ -84,6 +87,9 @@ commands=(
     ["安装当贝市场"]="install_dbmarket"
     ["向TV端输入文字(限英文)"]="input_text"
     ["显示Netflix影片码率"]="show_nf_info"
+    ["为Google TV系统安装Play商店图标"]="show_playstore_icon"
+    ["给软路由添加主机名映射(自定义劫持域名)"]="add_dhcp_domain"
+    
 )
 
 show_user_tips() {
@@ -188,6 +194,7 @@ install_subhelper_apk() {
     wget -O /tmp/subhelper.apk https://github.com/wukongdaily/tvhelper/raw/master/apks/subhelp14.apk
     if check_adb_connected; then
         # 使用 adb install 命令安装 APK，并捕获输出
+        adb uninstall com.wukongdaily.myclashsub 2>&1
         echo "正在推送和安装apk 请耐心等待..."
         install_result=$(adb install /tmp/subhelper.apk 2>&1)
         # 检查输出中是否包含 "Success"
@@ -238,6 +245,51 @@ install_dbmarket() {
         connect_adb
     fi
 }
+
+#这个apk 用于google tv系统。因为google tv系统在首页并不会显示自家的谷歌商店图标。
+#当然可以在系统设置——应用里找到，但是不太方便。因此我制作了它的图标。
+#它的作用就是显示在首页，当你点击后，就自然的进入google play商店里面。
+show_playstore_icon(){
+    wget -O /tmp/play-icon.apk https://github.com/wukongdaily/tvhelper/raw/master/apks/play-icon.apk
+    if check_adb_connected; then
+        # 使用 adb install 命令安装 APK，并捕获输出
+        echo "正在推送和安装apk 请耐心等待..."
+        install_result=$(adb install /tmp/play-icon.apk 2>&1)
+        # 检查输出中是否包含 "Success"
+        if [[ $install_result == *"Success"* ]]; then
+            echo "play商店图标 安装成功！你可以在全部应用里找到"
+        else
+            echo "APK 安装失败：$install_result"
+        fi
+        rm -rf /tmp/play-icon.apk
+    else
+        connect_adb
+    fi
+}
+
+# 添加主机名映射(解决安卓原生TV首次连不上wifi的问题)
+add_dhcp_domain() {
+	local domain_name="time.android.com"
+	local domain_ip="203.107.6.88"
+
+	# 检查是否存在相同的域名记录
+	existing_records=$(uci show dhcp | grep "dhcp.@domain\[[0-9]\+\].name='$domain_name'")
+	if [ -z "$existing_records" ]; then
+		# 添加新的域名记录
+		uci add dhcp domain
+		uci set "dhcp.@domain[-1].name=$domain_name"
+		uci set "dhcp.@domain[-1].ip=$domain_ip"
+		uci commit dhcp
+		echo
+		echo "已添加新的域名记录"
+	else
+		echo "相同的域名记录已存在，无需重复添加"
+	fi
+	echo -e "\n"
+	echo -e "time.android.com    203.107.6.88 "
+    echo -e "它的作用在于:解决安卓原生TV首次使用连不上wifi的问题"
+}
+
 
 show_nf_info() {
     if check_adb_connected; then
