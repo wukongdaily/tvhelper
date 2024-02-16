@@ -290,6 +290,11 @@ install_file_manager_plus() {
     install_apk "https://github.com/wukongdaily/tvhelper/raw/master/apks/File_Manager_Plus.apk" "com.alphainventor.filemanager"
 }
 
+# 安装Downloader
+install_downloader(){
+    install_apk "https://github.com/wukongdaily/tvhelper/raw/master/apks/downloader.apk" "com.esaba.downloader"
+}
+
 #根据apk地址和包名 安装apk
 install_apk_by_url() {
     local releases_url=$1
@@ -395,6 +400,7 @@ menu_options=(
     "安装Emotn Store应用商店"
     "安装当贝市场"
     "安装File Manager Plus"
+    "安装Downloader"
     "安装my-tv最新版(lizongying)"
     "安装BBLL最新版(xiaye13579)"
     #"获取apk地址"
@@ -415,7 +421,7 @@ commands=(
     ["安装my-tv最新版(lizongying)"]="install_mytv_latest_apk"
     ["安装BBLL最新版(xiaye13579)"]="install_BBLL_latest_apk"
     ["安装File Manager Plus"]="install_file_manager_plus"
-    
+    ["安装Downloader"]="install_downloader"
     #["获取apk地址"]="get_apk_url 'https://github.com/lizongying/my-tv/releases/latest'"
 )
 
