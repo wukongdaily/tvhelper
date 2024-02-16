@@ -19,16 +19,7 @@ is_x86_64_router() {
     fi
 }
 
-##获取软路由型号信息
-get_router_name() {
-    if is_x86_64_router; then
-        model_name=$(grep "model name" /proc/cpuinfo | head -n 1 | awk -F: '{print $2}' | sed 's/^[ \t]*//;s/[ \t]*$//')
-        echo "$model_name"
-    else
-        model_info=$(cat /tmp/sysinfo/model)
-        echo "$model_info"
-    fi
-}
+
 
 # 执行重启操作
 do_reboot() {
@@ -81,12 +72,10 @@ check_adb_connected() {
     # 检查是否有设备连接
     if [[ -n $devices ]]; then
         #adb已连接
-        echo
         #echo "$devices 已连接"
         return 0
     else
         #adb未连接
-        echo "没有检测到已连接的设备。请先连接ADB"
         return 1
     fi
 }
@@ -192,6 +181,16 @@ show_nf_info() {
     fi
 }
 
+show_menu_keycode(){
+    echo 
+    echo -e "${BLUE}使用背景:${NC}\n${YELLOW}许多国产App还保留了菜单键的功能\n而原生TV盒子系统似乎逐渐放弃适配菜单键\n因此很多盒子附带的遥控器不会标配菜单键\n\n所以开发此功能,它会模拟触发菜单键\n请在盒子上观察是否有效,可反复执行${NC}"
+    if check_adb_connected; then
+        adb shell input keyevent KEYCODE_MENU
+    else
+        connect_adb
+    fi 
+}
+
 # 向电视盒子输入英文
 input_text() {
     echo -e "${BLUE}此功能仅用于英文和拼音输入${NC}"
@@ -245,6 +244,58 @@ install_apk() {
     fi
 }
 
+# 批量安装apk功能
+install_all_apks() {
+    if check_adb_connected; then
+        # 获取/tmp/apks目录下的apk文件列表
+        apk_files=($(ls /tmp/apks/*.apk 2>/dev/null))
+        total_files=${#apk_files[@]}
+
+        # 检查是否有APK文件
+        if [ "$total_files" -eq "0" ]; then
+            echo -e "${RED}/tmp/apks 目录下不包含任何apk文件,请先拷贝apk文件到此目录.${NC}"
+            return 1
+        fi
+
+        echo -e "${GREEN}================文件列表================${NC}"
+        for apk_file in "${apk_files[@]}"; do
+            filename=$(basename "$apk_file")
+            echo -e "${GREEN}$filename${NC}"
+        done
+        echo -e "${GREEN}========================================${NC}"
+        echo
+        echo -e "${BLUE}发现 $total_files 个APK. 开始安装...\n安装过程若出现弹框,请点击详情后选择【仍然安装】即可${NC}"
+        echo
+        # 安装APK文件并显示进度
+        for apk_file in "${apk_files[@]}"; do
+            filename=$(basename "$apk_file")
+            echo -ne "${YELLOW}Installing: $filename${NC} ${GREEN}"
+            echo
+
+            # 模拟安装进度
+            while true; do
+                echo -n ".."
+                sleep 1
+            done &
+
+            # 保存进度指示进程的PID
+            PROGRESS_PID=$!
+
+            # 执行实际的APK安装命令，并捕获输出
+            install_result=$(adb install -r "$apk_file" 2>&1)
+
+            # 安装完成后，终止进度指示进程
+            kill $PROGRESS_PID >/dev/null 2>&1
+            wait $PROGRESS_PID 2>/dev/null
+            echo -e "${NC}\nInstallation result: $install_result"
+        done
+
+        echo -e "${GREEN}所有APK安装完毕.${NC}"
+    else
+        connect_adb
+    fi
+}
+
 # 安装订阅助手
 install_subhelper_apk() {
     echo -e "${BLUE}电视订阅助手使用指南 前往观看:https://youtu.be/9NpYtPsJlGk ${NC}"
@@ -291,7 +342,7 @@ install_file_manager_plus() {
 }
 
 # 安装Downloader
-install_downloader(){
+install_downloader() {
     install_apk "https://github.com/wukongdaily/tvhelper/raw/master/apks/downloader.apk" "com.esaba.downloader"
 }
 
@@ -396,6 +447,7 @@ menu_options=(
     "向TV端输入文字(限英文)"
     "为Google TV系统安装Play商店图标"
     "显示Netflix影片码率"
+    "模拟菜单键"
     "安装电视订阅助手"
     "安装Emotn Store应用商店"
     "安装当贝市场"
@@ -403,6 +455,7 @@ menu_options=(
     "安装Downloader"
     "安装my-tv最新版(lizongying)"
     "安装BBLL最新版(xiaye13579)"
+    "自定义批量安装/tmp/apks目录下的所有apk"
     #"获取apk地址"
 )
 
@@ -416,12 +469,15 @@ commands=(
     ["安装当贝市场"]="install_dbmarket"
     ["向TV端输入文字(限英文)"]="input_text"
     ["显示Netflix影片码率"]="show_nf_info"
+    ["模拟菜单键"]="show_menu_keycode"
     ["为Google TV系统安装Play商店图标"]="show_playstore_icon"
     ["给软路由添加主机名映射(自定义劫持域名)"]="add_dhcp_domain"
     ["安装my-tv最新版(lizongying)"]="install_mytv_latest_apk"
     ["安装BBLL最新版(xiaye13579)"]="install_BBLL_latest_apk"
     ["安装File Manager Plus"]="install_file_manager_plus"
     ["安装Downloader"]="install_downloader"
+    ["自定义批量安装/tmp/apks目录下的所有apk"]="install_all_apks"
+
     #["获取apk地址"]="get_apk_url 'https://github.com/lizongying/my-tv/releases/latest'"
 )
 
@@ -460,8 +516,29 @@ handle_choice() {
     eval "$command_to_run"
 }
 
+get_status() {
+    if check_adb_connected; then
+        adb_status="${GREEN}已连接${NC}"
+    else
+        adb_status="${RED}未连接${NC}"
+    fi
+    echo -e "*      与电视盒子的连接状态:$adb_status"
+}
+
+##获取软路由型号信息
+get_router_name() {
+    if is_x86_64_router; then
+        model_name=$(grep "model name" /proc/cpuinfo | head -n 1 | awk -F: '{print $2}' | sed 's/^[ \t]*//;s/[ \t]*$//')
+        echo "$model_name"
+    else
+        model_info=$(cat /tmp/sysinfo/model)
+        echo "$model_info"
+    fi
+}
+
 show_menu() {
     current_date=$(date +%Y%m%d)
+    mkdir -p /tmp/apks
     clear
     echo "***********************************************************************"
     echo -e "*      ${YELLOW}遥控助手OpenWrt版 (${current_date})${NC}        "
@@ -471,11 +548,12 @@ show_menu() {
     echo "**********************************************************************"
     echo
     echo "*      当前的路由器型号: $(get_router_name)"
+    echo "$(get_status)"
     echo
     echo "**********************************************************************"
     echo "请选择操作："
     for i in "${!menu_options[@]}"; do
-        echo "$((i + 1)). ${menu_options[i]}"
+        echo -e "${BLUE}$((i + 1)). ${menu_options[i]}${NC}"
     done
 }
 
