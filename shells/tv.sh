@@ -37,7 +37,7 @@ RED='\033[0;31m'
 # 无颜色
 NC='\033[0m'
 GREEN='\e[38;5;154m'
-YELLOW="\e[33m"
+YELLOW="\e[93m"
 BLUE="\e[96m"
 
 # 菜单选项数组
