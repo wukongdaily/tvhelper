@@ -39,61 +39,19 @@ do_poweroff() {
     poweroff
 }
 
-#提示用户要重启
-show_reboot_tips() {
-    reboot_code='do_reboot'
-    show_whiptail_dialog "软路由重启提醒" "           您是否要重启软路由?" "$reboot_code"
-}
-
-#提示用户要关机
-show_poweroff_tips() {
-    poweroff_code='do_poweroff'
-    show_whiptail_dialog "软路由重启提醒" "           您是否要关闭软路由?" "$poweroff_code"
-}
-
 #********************************************************
 
 # 定义红色文本
 RED='\033[0;31m'
 # 无颜色
 NC='\033[0m'
-GREEN='\033[0;32m'
+GREEN='\e[38;5;154m'
 YELLOW="\e[33m"
+BLUE="\e[96m"
 
 # 菜单选项数组
 declare -a menu_options
 declare -A commands
-menu_options=(
-    "安装ADB"
-    "连接ADB"
-    "断开ADB"
-    "给软路由添加主机名映射(自定义劫持域名)"
-    "一键修改NTP服务器地址"
-    "安装订阅助手"
-    "向TV端输入文字(限英文)"
-    "安装Emotn Store应用商店"
-    "安装当贝市场"
-    "安装my-tv最新版(lizongying)"
-    "为Google TV系统安装Play商店图标"
-    "显示Netflix影片码率"
-)
-
-commands=(
-    ["安装ADB"]="install_adb"
-    ["连接ADB"]="connect_adb"
-    ["断开ADB"]="disconnect_adb"
-    ["一键修改NTP服务器地址"]="modify_ntp"
-    ["安装订阅助手"]="install_subhelper_apk"
-    ["安装Emotn Store应用商店"]="install_emotn_store"
-    ["安装当贝市场"]="install_dbmarket"
-    ["向TV端输入文字(限英文)"]="input_text"
-    ["显示Netflix影片码率"]="show_nf_info"
-    ["为Google TV系统安装Play商店图标"]="show_playstore_icon"
-    ["给软路由添加主机名映射(自定义劫持域名)"]="add_dhcp_domain"
-    ["添加ADB防火墙规则"]="add_adb_firewall_rule"
-    ["安装my-tv最新版(lizongying)"]="download_latest_apk"
-
-)
 
 show_user_tips() {
     read -p "按 Enter 键继续..."
@@ -117,30 +75,14 @@ check_adb_installed() {
     fi
 }
 
-# 定义一个函数来添加ADB防火墙规则
-add_adb_firewall_rule() {
-    # 定义要添加的规则
-    ADB_RULE="iptables -I INPUT -p tcp --dport 5555 -j ACCEPT"
-    # 检查 /etc/firewall.user 是否已经包含了这条规则
-    if grep -qF -- "$ADB_RULE" /etc/firewall.user; then
-        echo "ADB规则已存在于 /etc/firewall.user 中。"
-    else
-        # 如果规则不存在，就添加它
-        echo "$ADB_RULE" >>/etc/firewall.user
-        echo "ADB规则已添加到 /etc/firewall.user。"
-
-        # 重启防火墙使规则生效
-        /etc/init.d/firewall restart
-    fi
-}
-
 # 判断adb是否连接成功
 check_adb_connected() {
     local devices=$(adb devices | awk 'NR>1 {print $1}' | grep -v '^$')
     # 检查是否有设备连接
     if [[ -n $devices ]]; then
         #adb已连接
-        echo "$devices 已连接"
+        echo
+        #echo "$devices 已连接"
         return 0
     else
         #adb未连接
@@ -150,12 +92,13 @@ check_adb_connected() {
 }
 # 安装adb工具
 install_adb() {
+    echo -e "${BLUE}绝大多数软路由自带ADB 只有少数OpenWrt硬路由才需要安装ADB${NC}"
     # 调用函数并根据返回值判断
     if check_adb_installed; then
-        echo "adb is ready"
+        echo -e "${YELLOW}您的路由器已经安装了ADB工具${NC}"
     else
-        echo "正在尝试安装adb"
         opkg update
+        echo -e "${YELLOW}正在尝试安装adb${NC}"
         opkg install adb
     fi
 }
@@ -168,7 +111,7 @@ connect_adb() {
     # 提取网关IP地址的前缀，假设网关IP是192.168.66.1，则需要提取192.168.66.
     gateway_prefix=$(echo $gateway_ip | sed 's/\.[0-9]*$//').
 
-    echo "请输入电视盒子的ip地址(${gateway_prefix})的最后一段数字"
+    echo -e "${YELLOW}请输入电视盒子的ip地址(${NC}${BLUE}${gateway_prefix}${NC}${YELLOW})的最后一段数字${NC}"
     read end_number
     if is_integer "$end_number"; then
         # 使用动态获取的网关前缀
@@ -178,7 +121,7 @@ connect_adb() {
         adb connect ${ip}
         # 尝试通过 adb shell 回显一个字符串来验证连接
         sleep 2
-        adb shell echo "ADB has successfully connected"
+        echo -e "${GREEN}$(adb shell echo "ADB 已经连接成功啦 你可以放心操作了")${NC}"
     else
         echo "错误: 请输入整数."
     fi
@@ -186,6 +129,7 @@ connect_adb() {
 
 # 一键修改NTP服务器地址
 modify_ntp() {
+    echo -e "${BLUE}它的作用在于:解决安卓原生TV时间不正确和网络受限问题${NC}"
     # 获取连接的设备列表
     local devices=$(adb devices | awk 'NR>1 {print $1}' | grep -v '^$')
 
@@ -195,7 +139,12 @@ modify_ntp() {
         # 对每个已连接的设备执行操作
         for device in $devices; do
             adb -s $device shell settings put global ntp_server ntp3.aliyun.com
-            echo -e "NTP服务器已经成功修改为 ntp3.aliyun.com"
+            adb -s $device shell settings put global captive_portal_mode 1
+            adb -s $device shell settings put global captive_portal_detection_enabled 1
+            # 设置一个返回204 空内容的服务器
+            adb -s $device shell settings put global captive_portal_use_https 0
+            adb -s $device shell settings put global captive_portal_http_url http://connect.rom.miui.com/generate_204
+            echo -e "${GREEN}NTP服务器地址已经成功修改为国内,重启后请检查盒子的系统时间和时区${NC}"
             echo -e "${RED}正在重启您的电视盒子或者电视机,请稍后.......${NC}"
             adb -s $device shell reboot &
         done
@@ -204,8 +153,6 @@ modify_ntp() {
     fi
 }
 
-
-
 #断开adb连接
 disconnect_adb() {
     install_adb
@@ -213,87 +160,9 @@ disconnect_adb() {
     echo "ADB 已经断开"
 }
 
-# 安装订阅助手
-install_subhelper_apk() {
-    wget -O /tmp/subhelper.apk https://github.com/wukongdaily/tvhelper/raw/master/apks/subhelp14.apk
-    if check_adb_connected; then
-        # 使用 adb install 命令安装 APK，并捕获输出
-        adb uninstall com.wukongdaily.myclashsub 2>&1
-        echo "正在推送和安装apk 请耐心等待..."
-        install_result=$(adb install /tmp/subhelper.apk 2>&1)
-        # 检查输出中是否包含 "Success"
-        if [[ $install_result == *"Success"* ]]; then
-            echo -e "${GREEN}订阅助手 安装成功！${NC}"
-        else
-            echo -e "${RED}APK 安装失败：$install_result ${NC}"
-        fi
-        rm -rf /tmp/subhelper.apk
-    else
-        connect_adb
-    fi
-}
-
-install_emotn_store() {
-    wget -O /tmp/emotn.apk "https://app.keeflys.com/20220107/com.overseas.store.appstore_1.0.40_a973.apk"
-    if check_adb_connected; then
-        # 使用 adb install 命令安装 APK，并捕获输出
-        echo "正在推送和安装apk 请耐心等待..."
-        install_result=$(adb install -r /tmp/emotn.apk 2>&1)
-        # 检查输出中是否包含 "Success"
-        if [[ $install_result == *"Success"* ]]; then
-            echo -e "${GREEN}Emotn Store 安装成功！${NC}"
-        else
-            echo -e "${RED}APK 安装失败：$install_result ${NC}"
-        fi
-        rm -rf /tmp/emotn.apk
-    else
-        connect_adb
-    fi
-}
-
-# 安装当贝市场
-install_dbmarket() {
-    wget -O /tmp/dangbeimarket.apk "https://webapk.dangbei.net/update/dangbeimarket.apk"
-    if check_adb_connected; then
-        # 使用 adb install 命令安装 APK，并捕获输出
-        adb uninstall com.dangbeimarket
-        echo "正在推送和安装apk 请耐心等待..."
-        install_result=$(adb install -r /tmp/dangbeimarket.apk 2>&1)
-        # 检查输出中是否包含 "Success"
-        if [[ $install_result == *"Success"* ]]; then
-            echo -e "${GREEN}当贝市场 安装成功！${NC}"
-        else
-            echo -e "${RED}APK 安装失败：$install_result ${NC}"
-        fi
-        rm -rf /tmp/dangbeimarket.apk
-    else
-        connect_adb
-    fi
-}
-
-#这个apk 用于google tv系统。因为google tv系统在首页并不会显示自家的谷歌商店图标。
-#当然可以在系统设置——应用里找到，但是不太方便。因此我制作了它的图标。
-#它的作用就是显示在首页，当你点击后，就自然的进入google play商店里面。
-show_playstore_icon() {
-    wget -O /tmp/play-icon.apk https://github.com/wukongdaily/tvhelper/raw/master/apks/play-icon.apk
-    if check_adb_connected; then
-        # 使用 adb install 命令安装 APK，并捕获输出
-        echo "正在推送和安装apk 请耐心等待..."
-        install_result=$(adb install /tmp/play-icon.apk 2>&1)
-        # 检查输出中是否包含 "Success"
-        if [[ $install_result == *"Success"* ]]; then
-            echo -e "${GREEN}play商店图标 安装成功！你可以在全部应用里找到${NC}"
-        else
-            echo -e "${RED}APK 安装失败：$install_result ${NC}"
-        fi
-        rm -rf /tmp/play-icon.apk
-    else
-        connect_adb
-    fi
-}
-
 # 添加主机名映射(解决安卓原生TV首次连不上wifi的问题)
 add_dhcp_domain() {
+    echo -e "${BLUE}它的作用在于:解决安卓原生TV首次使用连不上wifi的问题${NC}"
     local domain_name="time.android.com"
     local domain_ip="203.107.6.88"
 
@@ -312,10 +181,10 @@ add_dhcp_domain() {
     fi
     echo -e "\n"
     echo -e "time.android.com    203.107.6.88 "
-    echo -e "它的作用在于:解决安卓原生TV首次使用连不上wifi的问题"
 }
 
 show_nf_info() {
+    echo -e "${BLUE}播放Netflix影片的时候 屏幕左上角显示影片信息,再次执行则消失${NC}"
     if check_adb_connected; then
         adb shell input keyevent KEYCODE_F8
     else
@@ -325,6 +194,7 @@ show_nf_info() {
 
 # 向电视盒子输入英文
 input_text() {
+    echo -e "${BLUE}此功能仅用于英文和拼音输入${NC}"
     if check_adb_connected; then
         echo "请输入英文或数字"
         read str
@@ -334,36 +204,145 @@ input_text() {
     fi
 }
 
-#下载最新版我的电视
-# https://github.com/lizongying/my-tv/releases
-download_latest_apk() {
-    local api_url="https://api.github.com/repos/lizongying/my-tv/releases/latest"
-    apk_url=$(curl -s $api_url | grep "browser_download_url.*apk" | cut -d '"' -f 4)
+# 安装apk
+install_apk() {
+    local apk_download_url=$1
+    local package_name=$2
+    local filename=$(basename "$apk_download_url")
+    # 下载APK文件到临时目录
+    wget -O /tmp/$filename "$apk_download_url"
+    if check_adb_connected; then
+        # 卸载旧版本的APK（如果存在）
+        adb uninstall "$package_name" >/dev/null 2>&1
+        echo -e "${GREEN}正在推送和安装apk,请耐心等待...${NC}"
 
+        # 模拟安装进度
+        echo -ne "${BLUE}"
+        while true; do
+            echo -n ".."
+            sleep 1
+        done &
+
+        # 保存进度指示进程的PID
+        PROGRESS_PID=$!
+        install_result=$(adb install -r /tmp/$filename 2>&1)
+
+        # 安装完成后，终止进度指示进程
+        kill $PROGRESS_PID
+        wait $PROGRESS_PID 2>/dev/null
+        echo -e "${NC}\n"
+
+        # 检查安装结果
+        if [[ $install_result == *"Success"* ]]; then
+            echo -e "${GREEN}APK安装成功!请在盒子上查看${NC}"
+        else
+            echo -e "${RED}APK安装失败:$install_result${NC}"
+        fi
+        rm -rf /tmp/"$filename"
+        echo -e "${YELLOW}临时文件/tmp/${filename}已清理${NC}"
+    else
+        connect_adb
+    fi
+}
+
+# 安装订阅助手
+install_subhelper_apk() {
+    echo -e "${BLUE}电视订阅助手使用指南 前往观看:https://youtu.be/9NpYtPsJlGk ${NC}"
+    install_apk "https://github.com/wukongdaily/tvhelper/raw/master/apks/subhelp14.apk" "com.wukongdaily.myclashsub"
+}
+
+# 安装emotn store
+install_emotn_store() {
+    echo -e "${BLUE}emotn_store使用指南1 前往观看:https://youtu.be/_S693NITNrs ${NC}"
+    echo -e "${YELLOW}emotn_store使用指南2 前往观看:https://youtu.be/lMhhIn4CQts ${NC}"
+    echo -e "${BLUE}安装过程若出现弹框,请点击详情后选择【仍然安装】即可${NC}"
+    install_apk "https://app.keeflys.com/20220107/com.overseas.store.appstore_1.0.40_a973.apk" "com.overseas.store.appstore"
+}
+
+# 安装当贝市场
+install_dbmarket() {
+    echo -e "${BLUE}安装过程若出现弹框,请点击详情后选择【仍然安装】即可${NC}"
+    install_apk "https://webapk.dangbei.net/update/dangbeimarket.apk" "com.dangbeimarket"
+}
+
+# 安装play商店图标
+show_playstore_icon() {
+    echo -e "${BLUE}这个apk仅用于google tv系统。因为google tv系统在首页并不会显示自家的谷歌商店图标${NC}"
+    install_apk "https://github.com/wukongdaily/tvhelper/raw/master/apks/play-icon.apk" "com.android.vending.wk"
+}
+
+# 安装my-tv
+# release地址、包名、apk命名前缀
+install_mytv_latest_apk() {
+    echo -e "${BLUE}项目主页:https://github.com/lizongying/my-tv ${NC}"
+    install_apk_by_url "https://github.com/lizongying/my-tv/releases/latest" "com.lizongying.mytv" "my-tv-"
+}
+
+# 安装bbll
+# release地址、包名、apk命名前缀
+install_BBLL_latest_apk() {
+    echo -e "${BLUE}项目主页:https://github.com/xiaye13579/BBLL ${NC}"
+    install_apk_by_url "https://github.com/xiaye13579/BBLL/releases/latest" "com.xx.blbl" "BLBL_release_"
+}
+
+# 安装文件管理器
+install_file_manager_plus() {
+    install_apk "https://github.com/wukongdaily/tvhelper/raw/master/apks/File_Manager_Plus.apk" "com.alphainventor.filemanager"
+}
+
+#根据apk地址和包名 安装apk
+install_apk_by_url() {
+    local releases_url=$1
+    local package_name=$2
+    local name_prefix=$3
+
+    # 使用get_apk_url函数获取APK的下载链接
+    local apk_url=$(get_apk_url_by_name_prefix "$releases_url" "$name_prefix")
     if [ -z "$apk_url" ]; then
         echo "APK download URL could not be found."
         return 1
     fi
-    # Extract the filename from the URL
-    local filename=$(basename $apk_url)
-    echo "已获取最新版下载地址:$apk_url"
-    # Use curl to download the APK file and save it to /tmp directory
+
+    # 从URL中提取文件名
+    local filename=$(basename "$apk_url")
+    echo -e "${YELLOW}已获取最新版下载地址:\n$apk_url${NC}"
+
+    # 使用curl下载APK文件并保存到/tmp目录
     echo -e "${GREEN}Downloading APK to /tmp/$filename ... ${NC}"
-    curl -L $apk_url -o /tmp/$filename
+    curl -L "$apk_url" -o /tmp/"$filename"
 
     if [ $? -eq 0 ]; then
-        echo -e "${GREEN}APK downloaded successfully to /tmp/$filename. ${NC}"
+        echo -e "${GREEN}APK downloaded successfully to /tmp/$filename ${NC}"
         if check_adb_connected; then
-            # 使用 adb install 命令安装 APK，并捕获输出
-            echo -e "${GREEN}正在安装$filename........${NC}"
-            install_result=$(adb install -r /tmp/$filename 2>&1)
-            # 检查输出中是否包含 "Success"
+            # 卸载旧版本的APK
+            adb uninstall "$package_name" >/dev/null 2>&1
+            echo -e "${GREEN}正在推送和安装$filename 请耐心等待...${NC}"
+            # 模拟安装进度
+            echo -ne "${BLUE}"
+            while true; do
+                echo -n ".."
+                sleep 1
+            done &
+
+            # 保存进度指示进程的PID
+            PROGRESS_PID=$!
+
+            # 安装新版本的APK
+            install_result=$(adb install /tmp/"$filename" 2>&1)
+
+            # 安装完成后，终止进度指示进程
+            kill $PROGRESS_PID
+            wait $PROGRESS_PID 2>/dev/null
+            echo -e "${NC}\n"
+
+            # 检查安装结果
             if [[ $install_result == *"Success"* ]]; then
-                echo -e "${GREEN}my-tv 安装成功！你可以在全部应用里找到${NC}"
+                echo -e "${GREEN}APK安装成功!请在盒子上查看${NC}"
             else
-                echo -e "${RED}APK 安装失败：$install_result ${NC}"
+                echo -e "${RED}APK安装失败:$install_result${NC}"
             fi
-            rm -rf /tmp/$filename
+            rm -rf /tmp/"$filename"
+            echo -e "${YELLOW}临时文件/tmp/${filename}已清理${NC}"
         else
             connect_adb
         fi
@@ -372,6 +351,73 @@ download_latest_apk() {
         return 1
     fi
 }
+
+#根据release地址和命名前缀获取apk地址
+get_apk_url_by_name_prefix() {
+    if [ $# -eq 0 ]; then
+        echo "需要提供GitHub releases页面的URL作为参数。"
+        return 1
+    fi
+
+    local releases_url=$1
+    local name_prefix=$2
+
+    # 使用curl获取重定向的URL
+    latest_url=$(curl -Ls -o /dev/null -w "%{url_effective}" "$releases_url")
+
+    # 使用sed从URL中提取tag值，并保留前导字符'v'
+    tag=$(echo $latest_url | sed 's|.*/v|v|')
+
+    # 检查是否成功获取到tag
+    if [ -z "$tag" ]; then
+        echo "未找到最新的release tag。"
+        return 1
+    fi
+
+    # 拼接APK下载链接
+    local repo_path=$(echo "$releases_url" | sed -n 's|https://github.com/\(.*\)/releases/latest|\1|p')
+    apk_download_url="https://github.com/${repo_path}/releases/download/${tag}/${name_prefix}${tag}.apk"
+
+    echo "$apk_download_url"
+}
+
+# 菜单
+menu_options=(
+    "安装ADB"
+    "连接ADB"
+    "断开ADB"
+    "给软路由添加主机名映射(自定义劫持域名)"
+    "一键修改电视盒子NTP服务器地址"
+    "向TV端输入文字(限英文)"
+    "为Google TV系统安装Play商店图标"
+    "显示Netflix影片码率"
+    "安装电视订阅助手"
+    "安装Emotn Store应用商店"
+    "安装当贝市场"
+    "安装File Manager Plus"
+    "安装my-tv最新版(lizongying)"
+    "安装BBLL最新版(xiaye13579)"
+    #"获取apk地址"
+)
+
+commands=(
+    ["安装ADB"]="install_adb"
+    ["连接ADB"]="connect_adb"
+    ["断开ADB"]="disconnect_adb"
+    ["一键修改电视盒子NTP服务器地址"]="modify_ntp"
+    ["安装电视订阅助手"]="install_subhelper_apk"
+    ["安装Emotn Store应用商店"]="install_emotn_store"
+    ["安装当贝市场"]="install_dbmarket"
+    ["向TV端输入文字(限英文)"]="input_text"
+    ["显示Netflix影片码率"]="show_nf_info"
+    ["为Google TV系统安装Play商店图标"]="show_playstore_icon"
+    ["给软路由添加主机名映射(自定义劫持域名)"]="add_dhcp_domain"
+    ["安装my-tv最新版(lizongying)"]="install_mytv_latest_apk"
+    ["安装BBLL最新版(xiaye13579)"]="install_BBLL_latest_apk"
+    ["安装File Manager Plus"]="install_file_manager_plus"
+    
+    #["获取apk地址"]="get_apk_url 'https://github.com/lizongying/my-tv/releases/latest'"
+)
 
 # 处理菜单
 handle_choice() {
@@ -395,25 +441,30 @@ handle_choice() {
         return
     fi
 
-    # 执行命令
-    if [ -z "${commands[${menu_options[$choice - 1]}]}" ]; then
+    local selected_option="${menu_options[$choice - 1]}"
+    local command_to_run="${commands[$selected_option]}"
+
+    # 检查是否存在对应的命令
+    if [ -z "$command_to_run" ]; then
         echo -e "${RED}无效选项，请重新选择。${NC}"
         return
     fi
 
-    "${commands[${menu_options[$choice - 1]}]}"
+    # 使用eval执行命令
+    eval "$command_to_run"
 }
 
 show_menu() {
+    current_date=$(date +%Y%m%d)
     clear
     echo "***********************************************************************"
-    echo "*      遥控助手OpenWrt版 v1.0脚本        "
-    echo "*      自动识别CPU架构 x86_64/Arm 均可使用         "
-    echo -e "*      请确保电视盒子和OpenWrt路由器处于同一网段\n*      且电视盒子开启了USB调试模式(adb开关)         "
+    echo -e "*      ${YELLOW}遥控助手OpenWrt版 (${current_date})${NC}        "
+    echo -e "*      ${GREEN}专治安卓原生TV盒子在大陆使用的各种水土不服${NC}         "
+    echo -e "*      ${RED}请确保电视盒子和OpenWrt路由器处于${NC}${BLUE}同一网段${NC}\n*      ${RED}且电视盒子开启了${NC}${BLUE}USB调试模式(adb开关)${NC}         "
     echo "*      Developed by @wukongdaily        "
     echo "**********************************************************************"
     echo
-    echo "*      当前的软路由型号: $(get_router_name)"
+    echo "*      当前的路由器型号: $(get_router_name)"
     echo
     echo "**********************************************************************"
     echo "请选择操作："
