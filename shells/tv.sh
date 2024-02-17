@@ -66,15 +66,18 @@ check_adb_installed() {
 
 # 判断adb是否连接成功
 check_adb_connected() {
-    local devices=$(adb devices | awk 'NR>1 {print $1}' | grep -v '^$')
-    # 检查是否有设备连接
-    if [[ -n $devices ]]; then
-        #adb已连接
-        #echo "$devices 已连接"
-        return 0
+    if check_adb_installed; then
+        local devices=$(adb devices | awk 'NR>1 {print $1}' | grep -v '^$')
+        # 检查是否有设备连接
+        if [[ -n $devices ]]; then
+            #adb已连接
+            return 0
+        else
+            #adb未连接
+            return 1
+        fi
     else
-        #adb未连接
-        return 1
+        return 1 # 表示 adb 未安装
     fi
 }
 # 安装adb工具
@@ -198,7 +201,7 @@ input_text() {
             read str
             if [[ $str == "q" ]]; then
                 echo -e "${GREEN}退出输入模式。${NC}"
-                break  # 当用户输入q时退出循环
+                break # 当用户输入q时退出循环
             elif [[ $str == "qk" ]]; then
                 # 删除20个字符
                 for i in {1..20}; do
@@ -217,8 +220,6 @@ input_text() {
         connect_adb
     fi
 }
-
-
 
 # 安装apk
 install_apk() {
