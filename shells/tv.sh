@@ -19,8 +19,6 @@ is_x86_64_router() {
     fi
 }
 
-
-
 # 执行重启操作
 do_reboot() {
     reboot
@@ -181,27 +179,46 @@ show_nf_info() {
     fi
 }
 
-show_menu_keycode(){
-    echo 
+show_menu_keycode() {
+    echo
     echo -e "${BLUE}使用背景:${NC}\n${YELLOW}许多国产App还保留了菜单键的功能\n而原生TV盒子系统似乎逐渐放弃适配菜单键\n因此很多盒子附带的遥控器不会标配菜单键\n\n所以开发此功能,它会模拟触发菜单键\n请在盒子上观察是否有效,可反复执行${NC}"
     if check_adb_connected; then
         adb shell input keyevent KEYCODE_MENU
     else
         connect_adb
-    fi 
+    fi
 }
 
 # 向电视盒子输入英文
 input_text() {
-    echo -e "${BLUE}此功能仅用于英文和拼音输入${NC}"
+    echo -e "${BLUE}注意注意注意！请弹出键盘后再执行!每次输入会自动清空上次结果${NC}"
     if check_adb_connected; then
-        echo "请输入英文或数字"
-        read str
-        adb shell input text ${str}
+        while true; do
+            echo "请输入英文、数字或特定字符(如IP地址等) 输入q退出。输入【qk】删除20个字符。"
+            read str
+            if [[ $str == "q" ]]; then
+                echo -e "${GREEN}退出输入模式。${NC}"
+                break  # 当用户输入q时退出循环
+            elif [[ $str == "qk" ]]; then
+                # 删除20个字符
+                for i in {1..20}; do
+                    adb shell input keyevent KEYCODE_DEL
+                done
+                echo -e "${RED}哈哈!你可真够懒的!已帮你删除20个字符。继续输入或者输入q退出。${NC}"
+            elif [[ $str =~ [^a-zA-Z0-9\.\-\/\:] ]]; then
+                echo -e "${RED}adb不支持输入中文,请重新输入${NC}"
+            else
+                # 输入文本
+                adb shell input text "${str}"
+                echo -e "${GREEN}[OK] 已发送! 继续输入或者输入q退出。${NC}"
+            fi
+        done
     else
         connect_adb
     fi
 }
+
+
 
 # 安装apk
 install_apk() {
