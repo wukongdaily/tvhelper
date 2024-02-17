@@ -124,26 +124,24 @@ connect_adb() {
 # 一键修改NTP服务器地址
 modify_ntp() {
     echo -e "${BLUE}它的作用在于:解决安卓原生TV时间不正确和网络受限问题${NC}"
-    # 获取连接的设备列表
-    local devices=$(adb devices | awk 'NR>1 {print $1}' | grep -v '^$')
-
-    # 检查是否有设备连接
-    if [[ -n $devices ]]; then
-        echo "已连接的设备：$devices"
-        # 对每个已连接的设备执行操作
-        for device in $devices; do
-            adb -s $device shell settings put global ntp_server ntp3.aliyun.com
-            adb -s $device shell settings put global captive_portal_mode 1
-            adb -s $device shell settings put global captive_portal_detection_enabled 1
+    if check_adb_connected;then
+            adb shell settings put global ntp_server ntp3.aliyun.com
+            adb shell settings put global captive_portal_mode 1
+            adb shell settings put global captive_portal_detection_enabled 1
             # 设置一个返回204 空内容的服务器
-            adb -s $device shell settings put global captive_portal_use_https 0
-            adb -s $device shell settings put global captive_portal_http_url http://connect.rom.miui.com/generate_204
+            adb shell settings put global captive_portal_use_https 0
+            adb shell settings put global captive_portal_http_url http://connect.rom.miui.com/generate_204
             echo -e "${GREEN}NTP服务器地址已经成功修改为国内,重启后请检查盒子的系统时间和时区${NC}"
             echo -e "${RED}正在重启您的电视盒子或者电视机,请稍后.......${NC}"
-            adb -s $device shell reboot &
-        done
+            # 5秒倒计时
+            for i in {5..1}; do
+                echo -e "${RED}$i${NC} 秒后将重启设备"
+                sleep 1
+            done
+            adb shell reboot &
     else
         echo "没有检测到已连接的设备。请先连接ADB"
+        connect_adb
     fi
 }
 
