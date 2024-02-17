@@ -89,7 +89,11 @@ install_adb() {
     else
         opkg update
         echo -e "${YELLOW}正在尝试安装adb${NC}"
-        opkg install adb
+        if opkg install adb; then
+            echo -e "${GREEN}adb 安装成功!${NC}"
+        else
+            echo -e "${RED}adb 安装失败，请检查日志以获取更多信息。${NC}"
+        fi
     fi
 }
 
