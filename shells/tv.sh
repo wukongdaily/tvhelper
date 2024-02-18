@@ -67,19 +67,22 @@ check_adb_installed() {
 # 判断adb是否连接成功
 check_adb_connected() {
     if check_adb_installed; then
-        local devices=$(adb devices | awk 'NR>1 {print $1}' | grep -v '^$')
-        # 检查是否有设备连接
-        if [[ -n $devices ]]; then
-            #adb已连接
+        # 获取 adb devices 输出,跳过第一行（标题行）,并检查每一行的状态
+        local connected_devices=$(adb devices | awk 'NR>1 {print $2}' | grep 'device$')
+        # 检查是否有设备已连接并且状态为 'device',即已授权
+        if [[ -n $connected_devices ]]; then
+            # ADB 已连接并且设备已授权
             return 0
         else
-            #adb未连接
+            # ADB 设备未连接或未授权
             return 1
         fi
     else
-        return 1 # 表示 adb 未安装
+        # 表示 adb 未安装
+        return 1
     fi
 }
+
 # 安装adb工具
 install_adb() {
     echo -e "${BLUE}绝大多数软路由自带ADB 只有少数OpenWrt硬路由才需要安装ADB${NC}"
@@ -92,7 +95,7 @@ install_adb() {
         if opkg install adb; then
             echo -e "${GREEN}adb 安装成功!${NC}"
         else
-            echo -e "${RED}adb 安装失败，请检查日志以获取更多信息。${NC}"
+            echo -e "${RED}adb 安装失败,请检查日志以获取更多信息。${NC}"
         fi
     fi
 }
@@ -102,7 +105,7 @@ connect_adb() {
     install_adb
     # 动态获取网关地址
     gateway_ip=$(ip a show br-lan | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1)
-    # 提取网关IP地址的前缀，假设网关IP是192.168.66.1，则需要提取192.168.66.
+    # 提取网关IP地址的前缀,假设网关IP是192.168.66.1,则需要提取192.168.66.
     gateway_prefix=$(echo $gateway_ip | sed 's/\.[0-9]*$//').
 
     echo -e "${YELLOW}请输入电视盒子的ip地址(${NC}${BLUE}${gateway_prefix}${NC}${YELLOW})的最后一段数字${NC}"
@@ -110,16 +113,25 @@ connect_adb() {
     if is_integer "$end_number"; then
         # 使用动态获取的网关前缀
         ip=${gateway_prefix}${end_number}
-        echo -e "正在尝试连接ip地址为${ip}的电视盒子\n若首次使用或者还未授权USB调试\n请在盒子的提示弹框上点击 允许 按钮"
         adb disconnect
+        echo -e "${BLUE}首次使用,盒子上可能会提示授权弹框,给您半分钟时间来操作...【允许】${NC}"
         adb connect ${ip}
-        # 尝试通过 adb shell 回显一个字符串来验证连接
-        sleep 2
-        echo -e "${GREEN}$(adb shell echo "ADB 已经连接成功啦 你可以放心操作了")${NC}"
+         # 循环检测连接状态
+        for ((i=1; i<31; i++)); do
+            echo -e "${YELLOW}第${i}次尝试连接ADB,请在设备上点击【允许】按钮...${NC}"
+            device_status=$(adb devices | grep "${ip}:5555" | awk '{print $2}')
+            if [[ "$device_status" == "device" ]]; then
+                echo -e "${GREEN}ADB 已经连接成功啦,你可以放心操作了${NC}"
+                return 0
+            fi
+            sleep 1 # 每次检测间隔1秒
+        done
+        echo -e "${RED}连接超时,或者您点击了【取消】,请确认电视盒子的IP地址是否正确。如果问题持续存在,请检查设备的USB调试设置是否正确并重新连接adb${NC}"
     else
         echo "错误: 请输入整数."
     fi
 }
+
 
 # 一键修改NTP服务器地址
 modify_ntp() {
@@ -143,6 +155,11 @@ modify_ntp() {
         echo "没有检测到已连接的设备。请先连接ADB"
         connect_adb
     fi
+}
+
+# 显示当前时区
+show_timezone(){
+    adb shell getprop persist.sys.timezone
 }
 
 #断开adb连接
@@ -169,7 +186,7 @@ add_dhcp_domain() {
         echo
         echo "已添加新的域名记录"
     else
-        echo "相同的域名记录已存在，无需重复添加"
+        echo "相同的域名记录已存在,无需重复添加"
     fi
     echo -e "\n"
     echo -e "time.android.com    203.107.6.88 "
@@ -246,7 +263,7 @@ install_apk() {
         PROGRESS_PID=$!
         install_result=$(adb install -r /tmp/$filename 2>&1)
 
-        # 安装完成后，终止进度指示进程
+        # 安装完成后,终止进度指示进程
         kill $PROGRESS_PID
         wait $PROGRESS_PID 2>/dev/null
         echo -e "${NC}\n"
@@ -267,13 +284,13 @@ install_apk() {
 # 批量安装apk功能
 install_all_apks() {
     if check_adb_connected; then
-        # 获取/tmp/apks目录下的apk文件列表
-        apk_files=($(ls /tmp/apks/*.apk 2>/dev/null))
+        # 获取/tmp/upload目录下的apk文件列表
+        apk_files=($(ls /tmp/upload/*.apk 2>/dev/null))
         total_files=${#apk_files[@]}
 
         # 检查是否有APK文件
         if [ "$total_files" -eq "0" ]; then
-            echo -e "${RED}/tmp/apks 目录下不包含任何apk文件,请先拷贝apk文件到此目录.${NC}"
+            echo -e "${RED}/tmp/upload 目录下不包含任何apk文件,请先拷贝apk文件到此目录.${NC}"
             return 1
         fi
 
@@ -301,10 +318,10 @@ install_all_apks() {
             # 保存进度指示进程的PID
             PROGRESS_PID=$!
 
-            # 执行实际的APK安装命令，并捕获输出
+            # 执行实际的APK安装命令,并捕获输出
             install_result=$(adb install -r "$apk_file" 2>&1)
 
-            # 安装完成后，终止进度指示进程
+            # 安装完成后,终止进度指示进程
             kill $PROGRESS_PID >/dev/null 2>&1
             wait $PROGRESS_PID 2>/dev/null
             echo -e "${NC}\nInstallation result: $install_result"
@@ -406,7 +423,7 @@ install_apk_by_url() {
             # 安装新版本的APK
             install_result=$(adb install /tmp/"$filename" 2>&1)
 
-            # 安装完成后，终止进度指示进程
+            # 安装完成后,终止进度指示进程
             kill $PROGRESS_PID
             wait $PROGRESS_PID 2>/dev/null
             echo -e "${NC}\n"
@@ -441,7 +458,7 @@ get_apk_url_by_name_prefix() {
     # 使用curl获取重定向的URL
     latest_url=$(curl -Ls -o /dev/null -w "%{url_effective}" "$releases_url")
 
-    # 使用sed从URL中提取tag值，并保留前导字符'v'
+    # 使用sed从URL中提取tag值,并保留前导字符'v'
     tag=$(echo $latest_url | sed 's|.*/v|v|')
 
     # 检查是否成功获取到tag
@@ -457,25 +474,47 @@ get_apk_url_by_name_prefix() {
     echo "$apk_download_url"
 }
 
+# 添加emotn域名
+add_emotn_domain() {
+    # 检查 passwall 的代理域名文件是否存在
+    if [ -f "/usr/share/passwall/rules/proxy_host" ]; then
+        sed -i "s/keeflys.com//g" "/usr/share/passwall/rules/proxy_host"
+        echo -n "keeflys.com" | tee -a /usr/share/passwall/rules/proxy_host
+        echo -e "${GREEN}在pw代理域名中 添加成功!${NC}"
+    else
+        echo -e "${RED}在passwall代理域名中 添加失败! 请确保 passwall 已安装${NC}"
+    fi
+    # 检查 SSRP 的黑名单文件是否存在
+    if [ -f "/etc/ssrplus/black.list" ]; then
+        sed -i "s/keeflys.com//g" "/etc/ssrplus/black.list"
+        echo -n "keeflys.com" | tee -a /etc/ssrplus/black.list
+        echo -e "${GREEN}在SSRP代理域名中 添加成功!${NC}"
+    else
+        echo -e "${RED}添加失败! 请确保 SSRP 已安装${NC}"
+    fi
+    echo -e "\n\n"
+}
+
 # 菜单
 menu_options=(
     "安装ADB"
     "连接ADB"
     "断开ADB"
-    "给软路由添加主机名映射(自定义劫持域名)"
-    "一键修改电视盒子NTP服务器地址"
+    "给软路由添加主机名映射(自定义挟持域名,仅限主路由模式)"
+    "一键修改电视盒子NTP服务器地址(需重启)"
     "向TV端输入文字(限英文)"
     "为Google TV系统安装Play商店图标"
     "显示Netflix影片码率"
     "模拟菜单键"
     "安装电视订阅助手"
     "安装Emotn Store应用商店"
+    "给软路由增加Emotn Store域名"
     "安装当贝市场"
-    "安装File Manager Plus"
+    "安装文件管理器+"
     "安装Downloader"
     "安装my-tv最新版(lizongying)"
     "安装BBLL最新版(xiaye13579)"
-    "自定义批量安装/tmp/apks目录下的所有apk"
+    "自定义批量安装/tmp/upload目录下的所有apk"
     #"获取apk地址"
 )
 
@@ -483,20 +522,21 @@ commands=(
     ["安装ADB"]="install_adb"
     ["连接ADB"]="connect_adb"
     ["断开ADB"]="disconnect_adb"
-    ["一键修改电视盒子NTP服务器地址"]="modify_ntp"
+    ["一键修改电视盒子NTP服务器地址(需重启)"]="modify_ntp"
     ["安装电视订阅助手"]="install_subhelper_apk"
     ["安装Emotn Store应用商店"]="install_emotn_store"
+    ["给软路由增加Emotn Store域名"]="add_emotn_domain"
     ["安装当贝市场"]="install_dbmarket"
     ["向TV端输入文字(限英文)"]="input_text"
     ["显示Netflix影片码率"]="show_nf_info"
     ["模拟菜单键"]="show_menu_keycode"
     ["为Google TV系统安装Play商店图标"]="show_playstore_icon"
-    ["给软路由添加主机名映射(自定义劫持域名)"]="add_dhcp_domain"
+    ["给软路由添加主机名映射(自定义挟持域名,仅限主路由模式)"]="add_dhcp_domain"
     ["安装my-tv最新版(lizongying)"]="install_mytv_latest_apk"
     ["安装BBLL最新版(xiaye13579)"]="install_BBLL_latest_apk"
-    ["安装File Manager Plus"]="install_file_manager_plus"
+    ["安装文件管理器+"]="install_file_manager_plus"
     ["安装Downloader"]="install_downloader"
-    ["自定义批量安装/tmp/apks目录下的所有apk"]="install_all_apks"
+    ["自定义批量安装/tmp/upload目录下的所有apk"]="install_all_apks"
 
     #["获取apk地址"]="get_apk_url 'https://github.com/lizongying/my-tv/releases/latest'"
 )
@@ -506,7 +546,7 @@ handle_choice() {
     local choice=$1
     # 检查输入是否为空
     if [[ -z $choice ]]; then
-        echo -e "${RED}输入不能为空，请重新选择。${NC}"
+        echo -e "${RED}输入不能为空,请重新选择。${NC}"
         return
     fi
 
@@ -528,7 +568,7 @@ handle_choice() {
 
     # 检查是否存在对应的命令
     if [ -z "$command_to_run" ]; then
-        echo -e "${RED}无效选项，请重新选择。${NC}"
+        echo -e "${RED}无效选项,请重新选择。${NC}"
         return
     fi
 
@@ -538,11 +578,53 @@ handle_choice() {
 
 get_status() {
     if check_adb_connected; then
-        adb_status="${GREEN}已连接${NC}"
+        adb_status="${GREEN}已连接且已授权${NC}"
     else
         adb_status="${RED}未连接${NC}"
     fi
     echo -e "*      与电视盒子的连接状态:$adb_status"
+}
+
+# 获取电视盒子型号
+get_tvbox_model_name(){
+    if check_adb_connected; then
+        # 获取设备型号
+        local model=$(adb shell getprop ro.product.model)
+        # 获取设备制造商
+        local manufacturer=$(adb shell getprop ro.product.manufacturer)
+        # 清除换行符
+        model=$(echo $model | tr -d '\r' | tr -d '\n')
+        manufacturer=$(echo $manufacturer | tr -d '\r' | tr -d '\n')
+        echo -e "*      当前电视盒子型号:${BLUE}$manufacturer $model${NC}"
+    else
+        echo -e "*      当前电视盒子型号:${BLUE}请先连接ADB${NC}"
+    fi
+}
+
+# 获取电视盒子时区
+get_tvbox_timezone(){
+    if check_adb_connected; then
+        # 获取设备时区
+        device_timezone=$(adb shell getprop persist.sys.timezone)
+        # 获取设备系统时间，格式化为“年月日 时:分”
+        device_time=$(adb shell date "+%Y年%m月%d日 %H:%M")
+
+        echo -e "*      当前电视盒子时区:${YELLOW}$device_timezone${NC}"
+        echo -e "*      当前电视盒子时间:${YELLOW}$device_time${NC}"
+    else
+        echo -e "*      当前电视盒子时区:${BLUE}请先连接ADB${NC}"
+        echo -e "*      当前电视盒子时间:${BLUE}请先连接ADB${NC}"
+    fi
+}
+
+# 能否访问Github
+check_github_connected(){
+    # Ping GitHub域名
+    if ping -c 1 raw.githubusercontent.com > /dev/null 2>&1; then
+        echo -e "*      当前路由器能否访问Github:${GREEN}Yes${NC}"
+    else
+        echo -e "*      当前路由器能否访问Github:${RED}NO${NC}"
+    fi
 }
 
 ##获取软路由型号信息
@@ -558,7 +640,7 @@ get_router_name() {
 
 show_menu() {
     current_date=$(date +%Y%m%d)
-    mkdir -p /tmp/apks
+    mkdir -p /tmp/upload
     clear
     echo "***********************************************************************"
     echo -e "*      ${YELLOW}遥控助手OpenWrt版 (${current_date})${NC}        "
@@ -568,7 +650,10 @@ show_menu() {
     echo "**********************************************************************"
     echo
     echo "*      当前的路由器型号: $(get_router_name)"
+    echo "$(check_github_connected)"
     echo "$(get_status)"
+    echo "$(get_tvbox_model_name)"
+    echo "$(get_tvbox_timezone)"
     echo
     echo "**********************************************************************"
     echo "请选择操作："
