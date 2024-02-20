@@ -15,7 +15,7 @@ wget -O tv.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shel
 
 
 ```
-
+### 不带Bash环境的 用下列命令
 <img alt="Static Badge" src="https://img.shields.io/badge/sh-0?style=flat-square&logoColor=8A2BE2&label=%E7%8E%AF%E5%A2%83&labelColor=000000&color=009100"> <img alt="Static Badge" src="https://img.shields.io/badge/MT3000-0?style=flat-square&logoColor=8A2BE2&label=%E5%9E%8B%E5%8F%B7&labelColor=000000&color=2828FF"> <img alt="Static Badge" src="https://img.shields.io/badge/MT2500A-0?style=flat-square&logoColor=8A2BE2&label=%E5%9E%8B%E5%8F%B7&labelColor=000000&color=D94600"> <img alt="Static Badge" src="https://img.shields.io/badge/MT6000-0?style=flat-square&logoColor=8A2BE2&label=%E5%9E%8B%E5%8F%B7&labelColor=000000&color=336666">
 
 
@@ -27,7 +27,13 @@ wget -O env.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/she
 
 ```
 
-***
 # 辅助视频教程
 [最终效果展示 短视频](https://www.douyin.com/user/MS4wLjABAAAAte1MKVdw9wFvosRL1m6jRA-zvV1PAQLR6zOnuK03h28?modal_id=7337473840903245097)<br><br>
 [在线教学视频 长视频](https://www.youtube.com/watch?v=_HENSyrvQRY)
+
+
+# 鸣谢的项目
+### my-tv
+https://github.com/lizongying/my-tv
+### BBLL
+https://github.com/xiaye13579/BBLL
