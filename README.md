@@ -28,3 +28,5 @@ wget -O env.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/she
 ```
 
 ***
+# 辅助视频教程
+[在线教学视频](https://www.youtube.com/watch?v=_HENSyrvQRY)
