@@ -596,9 +596,15 @@ install_mixapps() {
         echo -e "${RED}安装失败${NC}"
     fi
 }
-
+# 进入KODI助手
 kodi_helper(){
     wget -O kodi.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/kodi.sh && chmod +x kodi.sh && ./kodi.sh
+}
+
+# 安装fire tv版本youtube
+install_youtube_firetv(){
+    echo -e "${BLUE}Fire TV版本Youtube无需谷歌框架 可用于所有安卓5.0以上电视盒子 ${NC}"
+    install_apk "https://github.com/wukongdaily/tvhelper/raw/master/apks/youtube.apk" "com.amazon.firetv.youtube"
 }
 # 菜单
 menu_options=(
@@ -622,7 +628,7 @@ menu_options=(
     "自定义批量安装/tmp/upload目录下的所有apk"
     "安装Mix-Apps用于显示全部应用"
     "进入KODI助手"
-    #"获取apk地址"
+    "安装Fire TV版Youtube(免谷歌框架)"
 )
 
 commands=(
@@ -646,6 +652,7 @@ commands=(
     ["自定义批量安装/tmp/upload目录下的所有apk"]="install_all_apks"
     ["安装Mix-Apps用于显示全部应用"]="install_mixapps"
     ["进入KODI助手"]="kodi_helper"
+    ["安装Fire TV版Youtube(免谷歌框架)"]="install_youtube_firetv"
     #["获取apk地址"]="get_apk_url 'https://github.com/lizongying/my-tv/releases/latest'"
 )
 
