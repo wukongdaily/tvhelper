@@ -19,15 +19,6 @@ is_x86_64_router() {
     fi
 }
 
-# 执行重启操作
-do_reboot() {
-    reboot
-}
-# 关机
-do_poweroff() {
-    poweroff
-}
-
 #********************************************************
 
 # 定义红色文本
@@ -495,87 +486,6 @@ add_emotn_domain() {
     echo -e "\n\n"
 }
 
-# 菜单
-menu_options=(
-    "安装ADB"
-    "连接ADB"
-    "断开ADB"
-    "给软路由添加主机名映射(自定义挟持域名,仅限主路由模式)"
-    "一键修改电视盒子NTP服务器地址(需重启)"
-    "向TV端输入文字(限英文)"
-    "为Google TV系统安装Play商店图标"
-    "显示Netflix影片码率"
-    "模拟菜单键"
-    "安装电视订阅助手"
-    "安装Emotn Store应用商店"
-    "给软路由增加Emotn Store域名"
-    "安装当贝市场"
-    "安装文件管理器+"
-    "安装Downloader"
-    "安装my-tv最新版(lizongying)"
-    "安装BBLL最新版(xiaye13579)"
-    "自定义批量安装/tmp/upload目录下的所有apk"
-    #"获取apk地址"
-)
-
-commands=(
-    ["安装ADB"]="install_adb"
-    ["连接ADB"]="connect_adb"
-    ["断开ADB"]="disconnect_adb"
-    ["一键修改电视盒子NTP服务器地址(需重启)"]="modify_ntp"
-    ["安装电视订阅助手"]="install_subhelper_apk"
-    ["安装Emotn Store应用商店"]="install_emotn_store"
-    ["给软路由增加Emotn Store域名"]="add_emotn_domain"
-    ["安装当贝市场"]="install_dbmarket"
-    ["向TV端输入文字(限英文)"]="input_text"
-    ["显示Netflix影片码率"]="show_nf_info"
-    ["模拟菜单键"]="show_menu_keycode"
-    ["为Google TV系统安装Play商店图标"]="show_playstore_icon"
-    ["给软路由添加主机名映射(自定义挟持域名,仅限主路由模式)"]="add_dhcp_domain"
-    ["安装my-tv最新版(lizongying)"]="install_mytv_latest_apk"
-    ["安装BBLL最新版(xiaye13579)"]="install_BBLL_latest_apk"
-    ["安装文件管理器+"]="install_file_manager_plus"
-    ["安装Downloader"]="install_downloader"
-    ["自定义批量安装/tmp/upload目录下的所有apk"]="install_all_apks"
-
-    #["获取apk地址"]="get_apk_url 'https://github.com/lizongying/my-tv/releases/latest'"
-)
-
-# 处理菜单
-handle_choice() {
-    local choice=$1
-    # 检查输入是否为空
-    if [[ -z $choice ]]; then
-        echo -e "${RED}输入不能为空,请重新选择。${NC}"
-        return
-    fi
-
-    # 检查输入是否为数字
-    if ! [[ $choice =~ ^[0-9]+$ ]]; then
-        echo -e "${RED}请输入有效数字!${NC}"
-        return
-    fi
-
-    # 检查数字是否在有效范围内
-    if [[ $choice -lt 1 ]] || [[ $choice -gt ${#menu_options[@]} ]]; then
-        echo -e "${RED}选项超出范围!${NC}"
-        echo -e "${YELLOW}请输入 1 到 ${#menu_options[@]} 之间的数字。${NC}"
-        return
-    fi
-
-    local selected_option="${menu_options[$choice - 1]}"
-    local command_to_run="${commands[$selected_option]}"
-
-    # 检查是否存在对应的命令
-    if [ -z "$command_to_run" ]; then
-        echo -e "${RED}无效选项,请重新选择。${NC}"
-        return
-    fi
-
-    # 使用eval执行命令
-    eval "$command_to_run"
-}
-
 get_status() {
     if check_adb_connected; then
         adb_status="${GREEN}已连接且已授权${NC}"
@@ -639,6 +549,105 @@ get_router_name() {
         echo "$model_info"
     fi
 }
+
+# 安装mix apps 用于显示全部app
+install_mixapps() {
+    local xapk_download_url="https://github.com/wukongdaily/tvhelper/raw/master/apks/mix.xapk"
+    local xapkname=$(basename "$xapk_download_url")
+    wget -O  "$xapk_download_url"
+    local xapk_file="/tmp/$xapkname"
+    local extract_to="/tmp/mix/"
+    mkdir -p "$extract_to"
+    unzip -o "$xapk_file" -d "$extract_to"
+    apk_files=$(find "$extract_to" -type f -name "*.apk")
+    adb install-multiple $apk_files
+}
+
+# 菜单
+menu_options=(
+    "安装ADB"
+    "连接ADB"
+    "断开ADB"
+    "给软路由添加主机名映射(自定义挟持域名,仅限主路由模式)"
+    "一键修改电视盒子NTP服务器地址(需重启)"
+    "向TV端输入文字(限英文)"
+    "为Google TV系统安装Play商店图标"
+    "显示Netflix影片码率"
+    "模拟菜单键"
+    "安装电视订阅助手"
+    "安装Emotn Store应用商店"
+    "给软路由增加Emotn Store域名"
+    "安装当贝市场"
+    "安装文件管理器+"
+    "安装Downloader"
+    "安装my-tv最新版(lizongying)"
+    "安装BBLL最新版(xiaye13579)"
+    "自定义批量安装/tmp/upload目录下的所有apk"
+    "安装Mix-Apps用于显示全部应用"
+    #"获取apk地址"
+)
+
+commands=(
+    ["安装ADB"]="install_adb"
+    ["连接ADB"]="connect_adb"
+    ["断开ADB"]="disconnect_adb"
+    ["一键修改电视盒子NTP服务器地址(需重启)"]="modify_ntp"
+    ["安装电视订阅助手"]="install_subhelper_apk"
+    ["安装Emotn Store应用商店"]="install_emotn_store"
+    ["给软路由增加Emotn Store域名"]="add_emotn_domain"
+    ["安装当贝市场"]="install_dbmarket"
+    ["向TV端输入文字(限英文)"]="input_text"
+    ["显示Netflix影片码率"]="show_nf_info"
+    ["模拟菜单键"]="show_menu_keycode"
+    ["为Google TV系统安装Play商店图标"]="show_playstore_icon"
+    ["给软路由添加主机名映射(自定义挟持域名,仅限主路由模式)"]="add_dhcp_domain"
+    ["安装my-tv最新版(lizongying)"]="install_mytv_latest_apk"
+    ["安装BBLL最新版(xiaye13579)"]="install_BBLL_latest_apk"
+    ["安装文件管理器+"]="install_file_manager_plus"
+    ["安装Downloader"]="install_downloader"
+    ["自定义批量安装/tmp/upload目录下的所有apk"]="install_all_apks"
+    ["安装Mix-Apps用于显示全部应用"]="install_mixapps"
+    
+
+    #["获取apk地址"]="get_apk_url 'https://github.com/lizongying/my-tv/releases/latest'"
+)
+
+# 处理菜单
+handle_choice() {
+    local choice=$1
+    # 检查输入是否为空
+    if [[ -z $choice ]]; then
+        echo -e "${RED}输入不能为空,请重新选择。${NC}"
+        return
+    fi
+
+    # 检查输入是否为数字
+    if ! [[ $choice =~ ^[0-9]+$ ]]; then
+        echo -e "${RED}请输入有效数字!${NC}"
+        return
+    fi
+
+    # 检查数字是否在有效范围内
+    if [[ $choice -lt 1 ]] || [[ $choice -gt ${#menu_options[@]} ]]; then
+        echo -e "${RED}选项超出范围!${NC}"
+        echo -e "${YELLOW}请输入 1 到 ${#menu_options[@]} 之间的数字。${NC}"
+        return
+    fi
+
+    local selected_option="${menu_options[$choice - 1]}"
+    local command_to_run="${commands[$selected_option]}"
+
+    # 检查是否存在对应的命令
+    if [ -z "$command_to_run" ]; then
+        echo -e "${RED}无效选项,请重新选择。${NC}"
+        return
+    fi
+
+    # 使用eval执行命令
+    eval "$command_to_run"
+}
+
+
 
 show_menu() {
     current_date=$(date +%Y%m%d)
