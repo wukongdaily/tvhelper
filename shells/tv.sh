@@ -94,34 +94,45 @@ install_adb() {
 # 连接adb
 connect_adb() {
     install_adb
-    # 动态获取网关地址
-    gateway_ip=$(ip a show br-lan | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1)
-    # 提取网关IP地址的前缀,假设网关IP是192.168.66.1,则需要提取192.168.66.
-    gateway_prefix=$(echo $gateway_ip | sed 's/\.[0-9]*$//').
 
-    echo -e "${YELLOW}请输入电视盒子的ip地址(${NC}${BLUE}${gateway_prefix}${NC}${YELLOW})的最后一段数字${NC}"
-    read end_number
-    if is_integer "$end_number"; then
-        # 使用动态获取的网关前缀
-        ip=${gateway_prefix}${end_number}
-        adb disconnect
-        echo -e "${BLUE}首次使用,盒子上可能会提示授权弹框,给您半分钟时间来操作...【允许】${NC}"
-        adb connect ${ip}
-        # 循环检测连接状态
-        for ((i = 1; i < 31; i++)); do
-            echo -e "${YELLOW}第${i}次尝试连接ADB,请在设备上点击【允许】按钮...${NC}"
-            device_status=$(adb devices | grep "${ip}:5555" | awk '{print $2}')
-            if [[ "$device_status" == "device" ]]; then
-                echo -e "${GREEN}ADB 已经连接成功啦,你可以放心操作了${NC}"
-                return 0
-            fi
-            sleep 1 # 每次检测间隔1秒
-        done
-        echo -e "${RED}连接超时,或者您点击了【取消】,请确认电视盒子的IP地址是否正确。如果问题持续存在,请检查设备的USB调试设置是否正确并重新连接adb${NC}"
+    # 尝试自动获取网关地址
+    #gateway_ip=$(ip route show default | grep default | awk '{print $3}')
+    gateway_ip=$(ip a show br-lan | grep 'inet ' | awk '{print $2}' | cut -d'/' -f1)
+    if [ -z "$gateway_ip" ]; then
+        echo -e "${RED}无法自动获取网关IP地址，请手动输入电视盒子的完整IP地址：${NC}"
+        read ip
     else
-        echo "错误: 请输入整数."
+        # 提取网关IP地址的前缀
+        gateway_prefix=$(echo $gateway_ip | sed 's/\.[0-9]*$//').
+
+        echo -e "${YELLOW}请输入电视盒子的ip地址(${NC}${BLUE}${gateway_prefix}${NC}${YELLOW})的最后一段数字${NC}"
+        read end_number
+        if is_integer "$end_number"; then
+            # 使用动态获取的网关前缀
+            ip=${gateway_prefix}${end_number}
+        else
+            echo -e "${RED}错误: 请输入整数。${NC}"
+            return 1
+        fi
     fi
+
+    adb disconnect
+    echo -e "${BLUE}首次使用,盒子上可能会提示授权弹框,给您半分钟时间来操作...【允许】${NC}"
+    adb connect ${ip}
+
+    # 循环检测连接状态
+    for ((i = 1; i <= 30; i++)); do
+        echo -e "${YELLOW}第${i}次尝试连接ADB,请在设备上点击【允许】按钮...${NC}"
+        device_status=$(adb devices | grep "${ip}:5555" | awk '{print $2}')
+        if [[ "$device_status" == "device" ]]; then
+            echo -e "${GREEN}ADB 已经连接成功啦,你可以放心操作了${NC}"
+            return 0
+        fi
+        sleep 1 # 每次检测间隔1秒
+    done
+    echo -e "${RED}连接超时,或者您点击了【取消】,请确认电视盒子的IP地址是否正确。如果问题持续存在,请检查设备的USB调试设置是否正确并重新连接adb${NC}"
 }
+
 
 # 一键修改NTP服务器地址
 modify_ntp() {
