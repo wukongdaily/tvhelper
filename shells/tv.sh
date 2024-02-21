@@ -554,8 +554,8 @@ get_router_name() {
 install_mixapps() {
     local xapk_download_url="https://github.com/wukongdaily/tvhelper/raw/master/apks/mix.xapk"
     local xapkname=$(basename "$xapk_download_url")
-    wget -O  "$xapk_download_url"
     local xapk_file="/tmp/$xapkname"
+    wget -O  $xapk_file "$xapk_download_url"
     local extract_to="/tmp/mix/"
     mkdir -p "$extract_to"
     unzip -o "$xapk_file" -d "$extract_to"
