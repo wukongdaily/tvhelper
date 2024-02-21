@@ -107,8 +107,8 @@ connect_adb() {
         adb disconnect
         echo -e "${BLUE}首次使用,盒子上可能会提示授权弹框,给您半分钟时间来操作...【允许】${NC}"
         adb connect ${ip}
-         # 循环检测连接状态
-        for ((i=1; i<31; i++)); do
+        # 循环检测连接状态
+        for ((i = 1; i < 31; i++)); do
             echo -e "${YELLOW}第${i}次尝试连接ADB,请在设备上点击【允许】按钮...${NC}"
             device_status=$(adb devices | grep "${ip}:5555" | awk '{print $2}')
             if [[ "$device_status" == "device" ]]; then
@@ -123,25 +123,24 @@ connect_adb() {
     fi
 }
 
-
 # 一键修改NTP服务器地址
 modify_ntp() {
     echo -e "${BLUE}它的作用在于:解决安卓原生TV时间不正确和网络受限问题${NC}"
-    if check_adb_connected;then
-            adb shell settings put global ntp_server ntp3.aliyun.com
-            adb shell settings put global captive_portal_mode 1
-            adb shell settings put global captive_portal_detection_enabled 1
-            # 设置一个返回204 空内容的服务器
-            adb shell settings put global captive_portal_use_https 0
-            adb shell settings put global captive_portal_http_url http://connect.rom.miui.com/generate_204
-            echo -e "${GREEN}NTP服务器地址已经成功修改为国内,重启后请检查盒子的系统时间和时区${NC}"
-            echo -e "${RED}正在重启您的电视盒子或者电视机,请稍后.......${NC}"
-            # 5秒倒计时
-            for i in {5..1}; do
-                echo -e "${RED}$i${NC} 秒后将重启设备"
-                sleep 1
-            done
-            adb shell reboot &
+    if check_adb_connected; then
+        adb shell settings put global ntp_server ntp3.aliyun.com
+        adb shell settings put global captive_portal_mode 1
+        adb shell settings put global captive_portal_detection_enabled 1
+        # 设置一个返回204 空内容的服务器
+        adb shell settings put global captive_portal_use_https 0
+        adb shell settings put global captive_portal_http_url http://connect.rom.miui.com/generate_204
+        echo -e "${GREEN}NTP服务器地址已经成功修改为国内,重启后请检查盒子的系统时间和时区${NC}"
+        echo -e "${RED}正在重启您的电视盒子或者电视机,请稍后.......${NC}"
+        # 5秒倒计时
+        for i in {5..1}; do
+            echo -e "${RED}$i${NC} 秒后将重启设备"
+            sleep 1
+        done
+        adb shell reboot &
     else
         echo "没有检测到已连接的设备。请先连接ADB"
         connect_adb
@@ -149,7 +148,7 @@ modify_ntp() {
 }
 
 # 显示当前时区
-show_timezone(){
+show_timezone() {
     adb shell getprop persist.sys.timezone
 }
 
@@ -496,7 +495,7 @@ get_status() {
 }
 
 # 获取电视盒子型号
-get_tvbox_model_name(){
+get_tvbox_model_name() {
     if check_adb_connected; then
         # 获取设备型号
         local model=$(adb shell getprop ro.product.model)
@@ -512,7 +511,7 @@ get_tvbox_model_name(){
 }
 
 # 获取电视盒子时区
-get_tvbox_timezone(){
+get_tvbox_timezone() {
     if check_adb_connected; then
         # 获取设备时区
         device_timezone=$(adb shell getprop persist.sys.timezone)
@@ -528,10 +527,10 @@ get_tvbox_timezone(){
 }
 
 # 能否访问Github
-check_github_connected(){
+check_github_connected() {
     # Ping GitHub域名并提取时间
     ping_time=$(ping -c 1 raw.githubusercontent.com | grep 'time=' | awk -F'time=' '{print $2}' | awk '{print $1}')
-    
+
     if [ -n "$ping_time" ]; then
         echo -e "*      当前路由器访问Github延时:${BLUE}${ping_time}ms${NC}"
     else
@@ -566,19 +565,34 @@ install_mixapps() {
     fi
     apk_files=$(find "$extract_to" -type f -name "*.apk")
     echo -e "解压后的多个apk:\n$apk_files"
-    adb install-multiple $apk_files
-     if [ $? -eq 0 ]; then
+    echo -ne "${YELLOW}正在安装: $xapkname${NC} ${GREEN}"
+    echo
+
+    # 模拟安装进度
+    while true; do
+        echo -n ".."
+        sleep 1
+    done &
+    # 保存进度指示进程的PID
+    PROGRESS_PID=$!
+    # 执行实际的APK安装命令,并捕获输出
+    install_result=$(adb install-multiple $apk_files 2>&1)
+    # 安装完成后,终止进度指示进程
+    kill $PROGRESS_PID >/dev/null 2>&1
+    wait $PROGRESS_PID 2>/dev/null
+    echo -e "${NC}\nInstallation result: $install_result"
+
+    if [ $? -eq 0 ]; then
         echo -e "${GREEN} 安装成功 ${NC}"
         # 安装成功后，删除解压的文件和原始XAPK文件
         echo -e "${RED}正在删除临时文件...${NC}"
         rm -rf "$extract_to" # 删除解压目录
-        rm -f "$xapk_file" # 删除原始XAPK文件
-        echo -e"${GREEN}临时文件删除完成${NC}"
+        rm -f "$xapk_file"   # 删除原始XAPK文件
+        echo -e "${GREEN}临时文件删除完成,行啦,在盒子上查看吧！${NC}"
     else
         echo -e "${RED}安装失败${NC}"
     fi
 }
-
 
 # 菜单
 menu_options=(
@@ -624,7 +638,6 @@ commands=(
     ["安装Downloader"]="install_downloader"
     ["自定义批量安装/tmp/upload目录下的所有apk"]="install_all_apks"
     ["安装Mix-Apps用于显示全部应用"]="install_mixapps"
-    
 
     #["获取apk地址"]="get_apk_url 'https://github.com/lizongying/my-tv/releases/latest'"
 )
@@ -663,8 +676,6 @@ handle_choice() {
     # 使用eval执行命令
     eval "$command_to_run"
 }
-
-
 
 show_menu() {
     current_date=$(date +%Y%m%d)
