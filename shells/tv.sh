@@ -555,13 +555,30 @@ install_mixapps() {
     local xapk_download_url="https://github.com/wukongdaily/tvhelper/raw/master/apks/mix.xapk"
     local xapkname=$(basename "$xapk_download_url")
     local xapk_file="/tmp/$xapkname"
-    wget -O  $xapk_file "$xapk_download_url"
+    wget -O "$xapk_file" "$xapk_download_url"
     local extract_to="/tmp/mix/"
     mkdir -p "$extract_to"
-    unzip -o "$xapk_file" -d "$extract_to"
+    if unzip -o "$xapk_file" -d "$extract_to"; then
+        echo "XAPK文件解压成功,准备安装..."
+    else
+        echo "XAPK文件解压失败,请检查文件是否损坏或尝试重新下载。"
+        return 1 # 返回一个错误状态
+    fi
     apk_files=$(find "$extract_to" -type f -name "*.apk")
+    echo -e "解压后的多个apk:\n$apk_files"
     adb install-multiple $apk_files
+     if [ $? -eq 0 ]; then
+        echo -e "${GREEN} 安装成功 ${NC}"
+        # 安装成功后，删除解压的文件和原始XAPK文件
+        echo -e "${RED}正在删除临时文件...${NC}"
+        rm -rf "$extract_to" # 删除解压目录
+        rm -f "$xapk_file" # 删除原始XAPK文件
+        echo -e"${GREEN}临时文件删除完成${NC}"
+    else
+        echo -e "${RED}安装失败${NC}"
+    fi
 }
+
 
 # 菜单
 menu_options=(
