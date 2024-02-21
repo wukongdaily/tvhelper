@@ -1,13 +1,5 @@
 #!/bin/bash
-# 全局变量来标记是否已经执行一次性操作
 # wget -O tv.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/tv.sh && chmod +x tv.sh && ./tv.sh
-executed_once=0
-# 定义只执行一次的操作
-execute_once() {
-    if [ $executed_once -eq 0 ]; then
-        executed_once=1
-    fi
-}
 
 #判断是否为x86软路由
 is_x86_64_router() {
@@ -605,6 +597,9 @@ install_mixapps() {
     fi
 }
 
+kodi_helper(){
+    wget -O kodi.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/kodi.sh && chmod +x kodi.sh && ./kodi.sh
+}
 # 菜单
 menu_options=(
     "安装ADB"
@@ -626,6 +621,7 @@ menu_options=(
     "安装BBLL最新版(xiaye13579)"
     "自定义批量安装/tmp/upload目录下的所有apk"
     "安装Mix-Apps用于显示全部应用"
+    "进入KODI助手"
     #"获取apk地址"
 )
 
@@ -649,7 +645,7 @@ commands=(
     ["安装Downloader"]="install_downloader"
     ["自定义批量安装/tmp/upload目录下的所有apk"]="install_all_apks"
     ["安装Mix-Apps用于显示全部应用"]="install_mixapps"
-
+    ["进入KODI助手"]="kodi_helper"
     #["获取apk地址"]="get_apk_url 'https://github.com/lizongying/my-tv/releases/latest'"
 )
 

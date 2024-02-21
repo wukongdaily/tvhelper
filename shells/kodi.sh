@@ -1,6 +1,5 @@
 #!/bin/bash
-# 全局变量来标记是否已经执行一次性操作
-# wget -O tv.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/tv.sh && chmod +x tv.sh && ./tv.sh
+# wget -O kodi.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/kodi.sh && chmod +x kodi.sh && ./kodi.sh
 
 #判断是否为x86软路由
 is_x86_64_router() {
@@ -230,36 +229,47 @@ get_router_name() {
 set_kodi_to_chinese() {
     # 确保Kodi已经关闭
     adb shell am force-stop org.xbmc.kodi
+
     # Kodi简体中文语言包下载地址
     LANGUAGE_PACK_URL="https://github.com/wukongdaily/tvhelper/raw/master/kodi/resource.language.zh_cn-10.0.64.zip"
 
     # Kodi的Add-ons目录路径，请根据实际情况进行修改
     KODI_ADDONS_PATH="/sdcard/Android/data/org.xbmc.kodi/files/.kodi/addons/"
+
+    # 创建本地临时目录用于解压
+    TEMP_DIR="/tmp/kodi_addons"
+    mkdir -p "$TEMP_DIR"
+
     echo -e "${GREEN}下载中文语言包...${NC}"
     wget -O /tmp/resource.language.zh_cn.zip "$LANGUAGE_PACK_URL"
 
-    echo -e "${GREEN}解压中文语言包到Kodi Add-ons目录...${NC}"
-    unzip -o /tmp/resource.language.zh_cn.zip -d "$KODI_ADDONS_PATH"
+    echo -e "${GREEN}解压中文语言包到本地临时目录...${NC}"
+    unzip -o /tmp/resource.language.zh_cn.zip -d "$TEMP_DIR"
+
+    # 推送整个解压后的文件夹到Kodi的Add-ons目录
+    adb push "$TEMP_DIR" "$KODI_ADDONS_PATH"
 
     echo -e "${RED}清理临时文件...${NC}"
-    rm /tmp/resource.language.zh_cn.zip
+    rm -rf /tmp/resource.language.zh_cn.zip "$TEMP_DIR"
 
     echo -e "${GREEN}中文语言包已安装至KODI,开始配置语言....${NC}"
     # 修改guisettings.xml以使用中文语言包
-    # 注意：这需要你已经根据上文方法拉取并准备修改guisettings.xml
-     # 修改guisettings.xml以使用Arial字体和中文语言包
     local KODI_SETTINGS_PATH="/sdcard/Android/data/org.xbmc.kodi/files/.kodi/userdata/guisettings.xml"
     # 先下载配置文件
     adb pull $KODI_SETTINGS_PATH /tmp/guisettings.xml
-     # 使用sed命令更新XML文件中的字体和语言设置
-    sed -i 's|<setting id="lookandfeel.font">.*</setting>|<setting id="lookandfeel.font">Arial</setting>|g' /tmp/guisettings.xml
-    sed -i 's|<setting id="locale.language">.*</setting>|<setting id="locale.language">resource.language.zh_cn</setting>|g' /tmp/guisettings.xml
+
+    # 使用sed命令更新XML文件中的字体和语言设置
+    sed -i 's|<setting id="lookandfeel.font"[^>]*>.*</setting>|<setting id="lookandfeel.font">Arial</setting>|g' /tmp/guisettings.xml
+    sed -i 's|<setting id="locale.language"[^>]*>.*</setting>|<setting id="locale.language">resource.language.zh_cn</setting>|g' /tmp/guisettings.xml
+
     # 再上传配置文件——更新
     adb push /tmp/guisettings.xml $KODI_SETTINGS_PATH
 
     # 重启Kodi
-    adb shell am start -n org.xbmc.kodi/.MainActivity
+    adb shell am start -a android.intent.action.MAIN -n org.xbmc.kodi/.Main
+    echo -e "${GREEN}Kodi的字体和语言设置已更新。${NC}"
 }
+
 
 # 菜单
 menu_options=(
