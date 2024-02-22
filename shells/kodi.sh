@@ -226,6 +226,7 @@ get_router_name() {
     fi
 }
 
+# 设置KODI为简体中文
 set_kodi_to_chinese() {
     # 确保Kodi已经关闭
     adb shell am force-stop org.xbmc.kodi
@@ -270,12 +271,61 @@ set_kodi_to_chinese() {
     echo -e "${GREEN}Kodi的字体和语言设置已更新。${NC}"
 }
 
+# 安装apk
+install_apk() {
+    local apk_download_url=$1
+    local package_name=$2
+    local filename=$(basename "$apk_download_url")
+    # 下载APK文件到临时目录
+    wget -O /tmp/$filename "$apk_download_url"
+    if check_adb_connected; then
+        # 卸载旧版本的APK（如果存在）
+        adb uninstall "$package_name" >/dev/null 2>&1
+        echo -e "${GREEN}正在推送和安装apk,请耐心等待...${NC}"
+
+        # 模拟安装进度
+        echo -ne "${BLUE}"
+        while true; do
+            echo -n ".."
+            sleep 1
+        done &
+
+        # 保存进度指示进程的PID
+        PROGRESS_PID=$!
+        install_result=$(adb install -r /tmp/$filename 2>&1)
+
+        # 安装完成后,终止进度指示进程
+        kill $PROGRESS_PID
+        wait $PROGRESS_PID 2>/dev/null
+        echo -e "${NC}\n"
+
+        # 检查安装结果
+        if [[ $install_result == *"Success"* ]]; then
+            echo -e "${GREEN}APK安装成功!请在盒子上查看${NC}"
+        else
+            echo -e "${RED}APK安装失败:$install_result${NC}"
+        fi
+        rm -rf /tmp/"$filename"
+        echo -e "${YELLOW}临时文件/tmp/${filename}已清理${NC}"
+    else
+        connect_adb
+    fi
+}
+
+
+# 安装KODI
+install_kodi(){
+    install_apk "https://mirror.karneval.cz/pub/xbmc/releases/android/arm/kodi-20.4-Nexus-armeabi-v7a.apk" "org.xbmc.kodi"
+}
+
+
 
 # 菜单
 menu_options=(
     "安装ADB"
     "连接ADB"
     "断开ADB"
+    "安装KODI 20.4"
     "设置KODI的语言为简体中文"
 
     #"获取apk地址"
@@ -285,6 +335,7 @@ commands=(
     ["安装ADB"]="install_adb"
     ["连接ADB"]="connect_adb"
     ["断开ADB"]="disconnect_adb"
+    ["安装KODI 20.4"]="install_kodi"
     ["设置KODI的语言为简体中文"]="set_kodi_to_chinese"
 
     #["获取apk地址"]="get_apk_url 'https://github.com/lizongying/my-tv/releases/latest'"
