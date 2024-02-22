@@ -629,6 +629,14 @@ install_youtube_firetv() {
     echo -e "${BLUE}Fire TV版本Youtube无需谷歌框架 可用于所有安卓5.0以上电视盒子 ${NC}"
     install_apk "https://github.com/wukongdaily/tvhelper/raw/master/apks/youtube.apk" "com.amazon.firetv.youtube"
 }
+
+# 赞助
+sponsor(){
+    echo
+    echo -e "${GREEN}访问赞助页面和悟空百科⬇${BLUE}"
+    echo -e "${BLUE} https://bit.ly/3woDZE7 ${NC}"
+    echo 
+}
 # 菜单
 menu_options=(
     "安装ADB"
@@ -652,6 +660,7 @@ menu_options=(
     "安装Mix-Apps用于显示全部应用"
     "进入KODI助手"
     "安装Fire TV版Youtube(免谷歌框架)"
+    "赞助(Support)"
 )
 
 commands=(
@@ -676,7 +685,8 @@ commands=(
     ["安装Mix-Apps用于显示全部应用"]="install_mixapps"
     ["进入KODI助手"]="kodi_helper"
     ["安装Fire TV版Youtube(免谷歌框架)"]="install_youtube_firetv"
-    #["获取apk地址"]="get_apk_url 'https://github.com/lizongying/my-tv/releases/latest'"
+    ["赞助(Support)"]="sponsor"
+    
 )
 
 # 处理菜单
