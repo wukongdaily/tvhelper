@@ -125,7 +125,6 @@ connect_adb() {
     echo -e "${RED}连接超时,或者您点击了【取消】,请确认电视盒子的IP地址是否正确。如果问题持续存在,请检查设备的USB调试设置是否正确并重新连接adb${NC}"
 }
 
-
 # 一键修改NTP服务器地址
 modify_ntp() {
     echo -e "${BLUE}它的作用在于:解决安卓原生TV时间不正确和网络受限问题${NC}"
@@ -187,18 +186,42 @@ add_dhcp_domain() {
 
 show_nf_info() {
     echo -e "${BLUE}播放Netflix影片的时候 屏幕左上角显示影片信息,再次执行则消失${NC}"
+    echo -e "${GREEN}Netflix INFO键已发送! 继续输入【m】模拟INFO键 或者输入q退出。${NC}"
     if check_adb_connected; then
-        adb shell input keyevent KEYCODE_F8
+        while true; do
+            read str
+            if [[ $str == "q" ]]; then
+                echo -e "${GREEN}退出输入模式。${NC}"
+                break # 当用户输入q时退出循环
+            elif [[ $str == "m" ]]; then
+                adb shell input keyevent KEYCODE_F8
+                echo -e "${GREEN}Netflix INFO键已发送! 继续输入【m】模拟INFO键 或者输入q退出。${NC}"
+            else
+                echo -e "${RED}请输入m或者输入q退出${NC}"
+            fi
+        done
     else
         connect_adb
     fi
 }
 
 show_menu_keycode() {
-    echo
     echo -e "${BLUE}使用背景:${NC}\n${YELLOW}许多国产App还保留了菜单键的功能\n而原生TV盒子系统似乎逐渐放弃适配菜单键\n因此很多盒子附带的遥控器不会标配菜单键\n\n所以开发此功能,它会模拟触发菜单键\n请在盒子上观察是否有效,可反复执行${NC}"
+    echo -e "${GREEN}菜单键已发送! 继续输入字母【m】模拟菜单键 或者输入q退出。${NC}"
     if check_adb_connected; then
-        adb shell input keyevent KEYCODE_MENU
+        while true; do
+
+            read str
+            if [[ $str == "q" ]]; then
+                echo -e "${GREEN}退出输入模式。${NC}"
+                break # 当用户输入q时退出循环
+            elif [[ $str == "m" ]]; then
+                adb shell input keyevent KEYCODE_MENU
+                echo -e "${GREEN}菜单键已发送! 继续输入m模拟菜单键 或者输入q退出。${NC}"
+            else
+                echo -e "${RED}请输入m或者输入q退出${NC}"
+            fi
+        done
     else
         connect_adb
     fi
@@ -597,12 +620,12 @@ install_mixapps() {
     fi
 }
 # 进入KODI助手
-kodi_helper(){
+kodi_helper() {
     wget -O kodi.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/kodi.sh && chmod +x kodi.sh && ./kodi.sh
 }
 
 # 安装fire tv版本youtube
-install_youtube_firetv(){
+install_youtube_firetv() {
     echo -e "${BLUE}Fire TV版本Youtube无需谷歌框架 可用于所有安卓5.0以上电视盒子 ${NC}"
     install_apk "https://github.com/wukongdaily/tvhelper/raw/master/apks/youtube.apk" "com.amazon.firetv.youtube"
 }
