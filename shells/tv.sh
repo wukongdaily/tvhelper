@@ -630,6 +630,10 @@ install_youtube_firetv() {
     install_apk "https://github.com/wukongdaily/tvhelper/raw/master/apks/youtube.apk" "com.amazon.firetv.youtube"
 }
 
+# 进入tvbox安装助手
+enter_tvbox_helper(){
+    wget -O box.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/box.sh && chmod +x box.sh && ./box.sh
+}
 # 赞助
 sponsor(){
     echo
@@ -660,6 +664,7 @@ menu_options=(
     "安装Mix-Apps用于显示全部应用"
     "进入KODI助手"
     "安装Fire TV版Youtube(免谷歌框架)"
+    "进入TVBox安装助手"
     "赞助(Support)"
 )
 
@@ -685,6 +690,7 @@ commands=(
     ["安装Mix-Apps用于显示全部应用"]="install_mixapps"
     ["进入KODI助手"]="kodi_helper"
     ["安装Fire TV版Youtube(免谷歌框架)"]="install_youtube_firetv"
+    ["进入TVBox安装助手"]="enter_tvbox_helper"
     ["赞助(Support)"]="sponsor"
     
 )
