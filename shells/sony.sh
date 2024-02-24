@@ -1,5 +1,5 @@
 #!/bin/bash
-# wget -O son y https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/sony.sh && chmod +x sony.sh && ./sony.sh
+# wget -O sony.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/sony.sh && chmod +x sony.sh && ./sony.sh
 
 #判断是否为x86软路由
 is_x86_64_router() {
@@ -219,7 +219,7 @@ install_disney(){
 
 # 安装Fire TV版本Youtube
 install_youtube(){
-    echo "waiting..."
+    install_apk "https://github.com/wukongdaily/tvhelper/raw/master/apks/youtube.apk"
 }
 
 # 安装HBO GO
@@ -288,15 +288,62 @@ install_app_bundle() {
     fi
 }
 
+# 安装apk
+install_apk() {
+    local apk_download_url=$1
+    local filename=$(basename "$apk_download_url")
+    # 下载APK文件到临时目录
+    wget -O /tmp/$filename "$apk_download_url"
+    if check_adb_connected; then
+        echo -e "${GREEN}正在推送和安装apk,请耐心等待...${NC}"
+
+        # 模拟安装进度
+        echo -ne "${BLUE}"
+        while true; do
+            echo -n ".."
+            sleep 1
+        done &
+
+        # 保存进度指示进程的PID
+        PROGRESS_PID=$!
+        install_result=$(adb install -r /tmp/$filename 2>&1)
+
+        # 安装完成后,终止进度指示进程
+        kill $PROGRESS_PID
+        wait $PROGRESS_PID 2>/dev/null
+        echo -e "${NC}\n"
+
+        # 检查安装结果
+        if [[ $install_result == *"Success"* ]]; then
+            echo -e "${GREEN}APK安装成功!请在盒子上查看${NC}"
+        else
+            echo -e "${RED}APK安装失败:$install_result${NC}"
+        fi
+        rm -rf /tmp/"$filename"
+        echo -e "${YELLOW}临时文件/tmp/${filename}已清理${NC}"
+    else
+        connect_adb
+    fi
+}
+
+sponsor(){
+    echo
+    echo -e "${GREEN}访问赞助页面和悟空百科⬇${BLUE}"
+    echo -e "${BLUE} https://bit.ly/3woDZE7 ${NC}"
+    echo 
+}
+
 # 菜单
 menu_options=(
     "安装ADB"
     "连接ADB"
     "断开ADB"
     "安装Netflix最新版"
+    "安装Apple TV+最新版"
     "安装Disney+最新版"
     "安装HBO GO最新版"
     "安装Youtube-FireTV版"
+    "赞助|打赏"
 )
 
 commands=(
@@ -307,6 +354,8 @@ commands=(
     ["安装Disney+最新版"]="install_disney"
     ["安装Youtube-FireTV版"]="install_youtube"
     ["安装HBO GO最新版"]="install_hbogo"
+    ["安装Apple TV+最新版"]="install_appletv"
+    ["赞助|打赏"]="sponsor"
 )
 
 

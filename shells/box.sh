@@ -248,6 +248,12 @@ install_tvbox(){
     install_apk "https://github.com/wukongdaily/tvhelper/raw/master/apks/TVBox.apk" "com.github.tvbox.osc.wk"
 }
 
+sponsor(){
+    echo
+    echo -e "${GREEN}访问赞助页面和悟空百科⬇${BLUE}"
+    echo -e "${BLUE} https://bit.ly/3woDZE7 ${NC}"
+    echo 
+}
 
 
 # 菜单
@@ -256,8 +262,7 @@ menu_options=(
     "连接ADB"
     "断开ADB"
     "安装TVBox(基于takagen99/Box源码打包)"
-
-    #"获取apk地址"
+    "赞助|打赏"
 )
 
 commands=(
@@ -265,6 +270,7 @@ commands=(
     ["连接ADB"]="connect_adb"
     ["断开ADB"]="disconnect_adb"
     ["安装TVBox(基于takagen99/Box源码打包)"]="install_tvbox"
+    ["赞助|打赏"]="sponsor"
 
 )
 

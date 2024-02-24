@@ -321,7 +321,12 @@ install_kodi(){
     install_apk "https://mirror.karneval.cz/pub/xbmc/releases/android/arm/kodi-20.4-Nexus-armeabi-v7a.apk" "org.xbmc.kodi"
 }
 
-
+sponsor(){
+    echo
+    echo -e "${GREEN}访问赞助页面和悟空百科⬇${BLUE}"
+    echo -e "${BLUE} https://bit.ly/3woDZE7 ${NC}"
+    echo 
+}
 
 # 菜单
 menu_options=(
@@ -330,8 +335,7 @@ menu_options=(
     "断开ADB"
     "安装KODI 20.4"
     "设置KODI的语言为简体中文"
-
-    #"获取apk地址"
+    "赞助|打赏"
 )
 
 commands=(
@@ -340,8 +344,7 @@ commands=(
     ["断开ADB"]="disconnect_adb"
     ["安装KODI 20.4"]="install_kodi"
     ["设置KODI的语言为简体中文"]="set_kodi_to_chinese"
-
-    #["获取apk地址"]="get_apk_url 'https://github.com/lizongying/my-tv/releases/latest'"
+    ["赞助|打赏"]="sponsor"
 )
 
 # 处理菜单

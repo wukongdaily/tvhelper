@@ -637,6 +637,12 @@ install_youtube_firetv() {
 enter_tvbox_helper(){
     wget -O box.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/box.sh && chmod +x box.sh && ./box.sh
 }
+
+# 进入sony电视助手
+enter_sonytv(){
+    wget -O sony.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/sony.sh && chmod +x sony.sh && ./sony.sh
+}
+
 # 赞助
 sponsor(){
     echo
@@ -668,7 +674,8 @@ menu_options=(
     "进入KODI助手"
     "安装Fire TV版Youtube(免谷歌框架)"
     "进入TVBox安装助手"
-    "赞助(Support)"
+    "进入Sony电视助手"
+    "赞助|打赏"
 )
 
 commands=(
@@ -694,8 +701,8 @@ commands=(
     ["进入KODI助手"]="kodi_helper"
     ["安装Fire TV版Youtube(免谷歌框架)"]="install_youtube_firetv"
     ["进入TVBox安装助手"]="enter_tvbox_helper"
-    ["赞助(Support)"]="sponsor"
-    
+    ["赞助|打赏"]="sponsor"
+    ["进入Sony电视助手"]="enter_sonytv"
 )
 
 # 处理菜单
