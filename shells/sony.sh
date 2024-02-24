@@ -201,23 +201,44 @@ get_router_name() {
     fi
 }
 
+# 安装Netflix
 install_netflix(){
-    echo "waiting..."
+    local app_name_dir="netflix"
+    download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/netflix/netflix.apk" $app_name_dir
+    install_app_bundle $app_name_dir
 }
 
+# 安装Disney+
 install_disney(){
-    download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/disney/disney-3.0.0-rc3.apk" "disney"
-    download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/disney/split_config.xhdpi.apk" "disney"
-    download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/disney/split_config.zh.apk" "disney"
-    install_app_bundle "disney"
+    local app_name_dir="disney"
+    download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/disney/disney.apk" $app_name_dir
+    download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/disney/split_config.xhdpi.apk" $app_name_dir
+    download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/disney/split_config.zh.apk" $app_name_dir
+    install_app_bundle $app_name_dir
 }
 
+# 安装Fire TV版本Youtube
 install_youtube(){
     echo "waiting..."
 }
 
+# 安装HBO GO
 install_hbogo(){
-    echo "waiting..."
+    local app_name_dir="hbogo"
+    download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/hbogo/hbo-go.apk" $app_name_dir
+    download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/hbogo/split_config.xhdpi.apk" $app_name_dir
+    download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/hbogo/split_config.zh.apk" $app_name_dir
+    install_app_bundle $app_name_dir
+}
+
+install_appletv(){
+    local app_name_dir="appletv"
+    download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/appletv/appletv.apk" $app_name_dir
+    download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/appletv/split_config.armeabi_v7a.apk" $app_name_dir
+    download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/appletv/split_config.es.apk" $app_name_dir
+    download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/appletv/split_config.xhdpi.apk" $app_name_dir
+    download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/appletv/split_config.zh.apk" $app_name_dir
+    install_app_bundle $app_name_dir
 }
 
 
