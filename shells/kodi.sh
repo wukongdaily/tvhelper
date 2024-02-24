@@ -128,9 +128,12 @@ show_timezone() {
 
 #断开adb连接
 disconnect_adb() {
-    install_adb
-    adb disconnect
-    echo "ADB 已经断开"
+    if check_adb_installed; then
+        adb disconnect
+        echo "ADB 已经断开"
+    else
+        echo -e "${YELLOW}您还没有安装ADB${NC}"
+    fi
 }
 
 # 向电视盒子输入英文

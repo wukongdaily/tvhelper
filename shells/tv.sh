@@ -156,9 +156,12 @@ show_timezone() {
 
 #断开adb连接
 disconnect_adb() {
-    install_adb
-    adb disconnect
-    echo "ADB 已经断开"
+    if check_adb_installed; then
+        adb disconnect
+        echo "ADB 已经断开"
+    else
+        echo -e "${YELLOW}您还没有安装ADB${NC}"
+    fi
 }
 
 # 添加主机名映射(解决安卓原生TV首次连不上wifi的问题)
@@ -758,7 +761,8 @@ while true; do
     show_menu
     read -p "请输入选项的序号(输入q退出): " choice
     if [[ $choice == 'q' ]]; then
-        break
+            disconnect_adb
+            break
     fi
     handle_choice $choice
     echo "按任意键继续..."
