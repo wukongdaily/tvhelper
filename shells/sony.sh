@@ -209,7 +209,7 @@ install_disney(){
     download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/disney/disney-3.0.0-rc3.apk" "disney"
     download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/disney/split_config.xhdpi.apk" "disney"
     download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/disney/split_config.zh.apk" "disney"
-    install_apk "disney"
+    install_app_bundle "disney"
 }
 
 install_youtube(){
@@ -233,7 +233,7 @@ download_apk(){
 }
 
 # 根据文件夹名称,安装文件夹中全部apk
-install_apk() {
+install_app_bundle() {
    local app_name_dir=$1
     if check_adb_connected; then
         echo -e "${GREEN}正在推送和安装apk,请耐心等待...${NC}"
