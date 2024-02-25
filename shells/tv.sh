@@ -675,6 +675,7 @@ menu_options=(
     "安装Fire TV版Youtube(免谷歌框架)"
     "进入TVBox安装助手"
     "进入Sony电视助手"
+    "更新脚本"
     "赞助|打赏"
 )
 
@@ -703,7 +704,12 @@ commands=(
     ["进入TVBox安装助手"]="enter_tvbox_helper"
     ["赞助|打赏"]="sponsor"
     ["进入Sony电视助手"]="enter_sonytv"
+    ["更新脚本"]="update_sh"
 )
+
+update_sh(){
+    wget -O tv.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/tv.sh && chmod +x tv.sh && ./tv.sh
+}
 
 # 处理菜单
 handle_choice() {
