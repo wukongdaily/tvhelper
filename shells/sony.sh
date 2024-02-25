@@ -231,6 +231,7 @@ install_hbogo(){
     install_app_bundle $app_name_dir
 }
 
+# 安装appletv+
 install_appletv(){
     local app_name_dir="appletv"
     download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/appletv/appletv.apk" $app_name_dir
@@ -238,6 +239,14 @@ install_appletv(){
     download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/appletv/split_config.es.apk" $app_name_dir
     download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/appletv/split_config.xhdpi.apk" $app_name_dir
     download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/appletv/split_config.zh.apk" $app_name_dir
+    install_app_bundle $app_name_dir
+}
+# 安装mytvsuper
+install_mytvsuper(){
+    local app_name_dir="mytvsuper"
+    download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/mytvsuper/mytvsuper.apk" $app_name_dir
+    download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/mytvsuper/split_config.xhdpi.apk" $app_name_dir
+    download_apk "https://github.com/wukongdaily/tvhelper/raw/master/sony/mytvsuper/split_config.zh.apk" $app_name_dir
     install_app_bundle $app_name_dir
 }
 
@@ -342,6 +351,7 @@ menu_options=(
     "安装Apple TV+最新版"
     "安装Disney+最新版"
     "安装HBO GO最新版"
+    "安装myTVSuper最新版"
     "安装Youtube-FireTV版"
     "赞助|打赏"
 )
@@ -355,6 +365,7 @@ commands=(
     ["安装Youtube-FireTV版"]="install_youtube"
     ["安装HBO GO最新版"]="install_hbogo"
     ["安装Apple TV+最新版"]="install_appletv"
+    ["安装myTVSuper最新版"]="install_mytvsuper"
     ["赞助|打赏"]="sponsor"
 )
 
