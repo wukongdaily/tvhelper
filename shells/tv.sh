@@ -707,9 +707,23 @@ commands=(
     ["更新脚本"]="update_sh"
 )
 
-update_sh(){
-    wget -O tv.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/tv.sh && chmod +x tv.sh && ./tv.sh
+update_sh() {
+    break
+    echo "正在更新脚本..."
+    # 下载最新的脚本到临时文件
+    wget -O /tmp/script.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/tv.sh
+    # 替换当前脚本
+    if [ -f /tmp/script.sh ]; then
+        chmod +x /tmp/script.sh
+        cp /tmp/script.sh /tv.sh
+        echo "脚本更新成功。即将重新启动脚本。"
+        # 使用 exec 来重新启动脚本，替换当前进程
+        exec /tv.sh
+    else
+        echo "更新失败。"
+    fi
 }
+
 
 # 处理菜单
 handle_choice() {
