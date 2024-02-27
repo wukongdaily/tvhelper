@@ -34,6 +34,7 @@ wget -O env.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/she
 [最终效果展示 短视频](https://www.douyin.com/user/MS4wLjABAAAAte1MKVdw9wFvosRL1m6jRA-zvV1PAQLR6zOnuK03h28?modal_id=7337473840903245097)<br><br>
 [在线教学视频 长视频](https://www.youtube.com/watch?v=_HENSyrvQRY)
 
+<img src="https://github.com/wukongdaily/tvhelper/assets/143675923/eb3ccbe1-3240-459f-8eb1-2caa3ac13b81" width="50%" />
 
 # 鸣谢的项目
 ### my-tv
