@@ -1,6 +1,6 @@
 #!/bin/bash
 # wget -O tv.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/tv.sh && chmod +x tv.sh && ./tv.sh
-
+SCRIPT_VERSION="2.0.1"
 #判断是否为x86软路由
 is_x86_64_router() {
     DISTRIB_ARCH=$(cat /etc/openwrt_release | grep "DISTRIB_ARCH" | cut -d "'" -f 2)
@@ -635,6 +635,7 @@ install_youtube_firetv() {
 
 # 进入tvbox安装助手
 enter_tvbox_helper(){
+    wget -O /tmp/TVBox.json "https://github.com/wukongdaily/tvhelper/raw/master/apks/TVBox.json"
     wget -O box.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/box.sh && chmod +x box.sh && ./box.sh
 }
 
@@ -761,11 +762,10 @@ handle_choice() {
 }
 
 show_menu() {
-    current_date=$(date +%Y%m%d)
     mkdir -p /tmp/upload
     clear
     echo "***********************************************************************"
-    echo -e "*      ${YELLOW}遥控助手OpenWrt版 (${current_date})${NC}        "
+    echo -e "*      ${YELLOW}盒子助手OP版 当前版本:v${SCRIPT_VERSION}${NC}        "
     echo -e "*      ${GREEN}专治安卓原生TV盒子在大陆使用的各种水土不服${NC}         "
     echo -e "*      ${RED}请确保电视盒子和OpenWrt路由器处于${NC}${BLUE}同一网段${NC}\n*      ${RED}且电视盒子开启了${NC}${BLUE}USB调试模式(adb开关)${NC}         "
     echo "*      Developed by @wukongdaily        "

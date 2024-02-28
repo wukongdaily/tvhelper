@@ -136,7 +136,6 @@ disconnect_adb() {
     fi
 }
 
-
 get_status() {
     if check_adb_connected; then
         adb_status="${GREEN}已连接且已授权${NC}"
@@ -242,26 +241,24 @@ install_apk() {
     fi
 }
 
-
 # 安装TVBox
-install_tvbox(){
+install_tvbox() {
     install_apk "https://github.com/wukongdaily/tvhelper/raw/master/apks/TVBox.apk" "com.github.tvbox.osc.wk"
 }
 
-sponsor(){
+sponsor() {
     echo
     echo -e "${GREEN}访问赞助页面和悟空百科⬇${BLUE}"
     echo -e "${BLUE} https://bit.ly/3woDZE7 ${NC}"
-    echo 
+    echo
 }
-
 
 # 菜单
 menu_options=(
     "安装ADB"
     "连接ADB"
     "断开ADB"
-    "安装TVBox(基于takagen99/Box源码打包)"
+    "安装TVBox"
     "赞助|打赏"
 )
 
@@ -269,7 +266,7 @@ commands=(
     ["安装ADB"]="install_adb"
     ["连接ADB"]="connect_adb"
     ["断开ADB"]="disconnect_adb"
-    ["安装TVBox(基于takagen99/Box源码打包)"]="install_tvbox"
+    ["安装TVBox"]="install_tvbox"
     ["赞助|打赏"]="sponsor"
 
 )
@@ -308,10 +305,39 @@ handle_choice() {
     # 使用eval执行命令
     eval "$command_to_run"
 }
-
-show_menu() {
+initEnv() {
     current_date=$(date +%Y%m%d)
     mkdir -p /tmp/upload
+    if check_jq_installed; then
+        echo
+    else
+        opkg update
+        opkg install jq
+    fi
+    # jq解析json
+    json_file="/tmp/TVBox.json"
+    # 检查文件是否存在
+    if [ -f "$json_file" ]; then
+        # 如果文件存在，使用jq命令提取versionName并赋值给变量
+        versionName=$(jq -r '.elements[0].versionName' "$json_file")
+    else
+        # 如果文件不存在就下载
+        echo -e "${RED}Error: JSON file does not exist.${NC}"
+        wget -O /tmp/TVBox.json "https://github.com/wukongdaily/tvhelper/raw/master/apks/TVBox.json"
+        versionName=$(jq -r '.elements[0].versionName' "$json_file")
+    fi
+}
+
+check_jq_installed() {
+    # 使用opkg列出已安装的包，并通过grep查找jq
+    if opkg list-installed | grep -q "^jq "; then
+        return 0 # jq 已安装
+    else
+        return 1 # jq 未安装
+    fi
+}
+show_menu() {
+    initEnv
     clear
     echo "***********************************************************************"
     echo -e "*      ${YELLOW}TVBOX助手 OpenWrt版 (${current_date})${NC}        "
@@ -326,8 +352,16 @@ show_menu() {
     echo
     echo "**********************************************************************"
     echo "请选择操作："
+
+    # 特殊处理的项数组
+    special_items=("安装TVBox")
     for i in "${!menu_options[@]}"; do
-        echo -e "${BLUE}$((i + 1)). ${menu_options[i]}${NC}"
+        if [[ " ${special_items[*]} " =~ " ${menu_options[i]} " ]]; then
+            # 如果当前项在特殊处理项数组中，追加versionName
+            echo -e "${GREEN}$((i + 1)). ${menu_options[i]}${NC}${BLUE}(${versionName})${NC}"
+        else
+            echo -e "${BLUE}$((i + 1)). ${menu_options[i]}${NC}"
+        fi
     done
 }
 
