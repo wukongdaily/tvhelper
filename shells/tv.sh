@@ -788,6 +788,8 @@ while true; do
     read -p "请输入选项的序号(输入q退出): " choice
     if [[ $choice == 'q' ]]; then
             disconnect_adb
+            echo -e "${GREEN}您已退出悟空的盒子助手,下次运行 ./tv.sh 即可${NC}"
+            echo
             break
     fi
     handle_choice $choice
