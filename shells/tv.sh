@@ -1,6 +1,6 @@
 #!/bin/bash
 # wget -O tv.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/tv.sh && chmod +x tv.sh && ./tv.sh
-SCRIPT_VERSION="2.0.2"
+SCRIPT_VERSION="2.0.3"
 #判断是否为x86软路由
 is_x86_64_router() {
     DISTRIB_ARCH=$(cat /etc/openwrt_release | grep "DISTRIB_ARCH" | cut -d "'" -f 2)
@@ -235,8 +235,9 @@ input_text() {
     echo -e "${BLUE}注意注意注意！请弹出键盘后再执行!每次输入会自动清空上次结果${NC}"
     if check_adb_connected; then
         while true; do
-            echo "请输入英文、数字或特定字符(如IP地址等) 输入q退出。输入【qk】删除20个字符。"
+            echo -e "仅支持英文字符和常规简单网址 不能支持 & * ? ,不建议重度使用此功能,重度使用请使用蓝牙键盘\n${YELLOW}如果输入clash订阅地址强烈建议使用第10项,${NC}\n ADB不适合处理特殊字符,且Openwrt下的adb版本也较低) \n输入【q】退出。输入【qk】删除20个字符。输入【blue】搜索蓝牙键盘。请您输入"
             read str
+
             if [[ $str == "q" ]]; then
                 echo -e "${GREEN}退出输入模式。${NC}"
                 break # 当用户输入q时退出循环
@@ -246,17 +247,38 @@ input_text() {
                     adb shell input keyevent KEYCODE_DEL
                 done
                 echo -e "${RED}哈哈!你可真够懒的!已帮你删除20个字符。继续输入或者输入q退出。${NC}"
-            elif [[ $str =~ [^a-zA-Z0-9\.\-\/\:] ]]; then
-                echo -e "${RED}adb不支持输入中文,请重新输入${NC}"
+            elif [[ $str == "blue" ]]; then
+                # 蓝牙
+                adb shell input keyevent KEYCODE_PAIRING
+                echo -e "${YELLOW}已进入蓝牙配对模式。请在电视屏幕或显示器上根据提示配对您的蓝牙键盘${NC}"
             else
-                # 输入文本
-                adb shell input text "${str}"
-                echo -e "${GREEN}[OK] 已发送! 继续输入或者输入q退出。${NC}"
+                after_str=$(convert_str "$str")
+                if adb shell input text "$after_str"; then
+                    echo -e "${GREEN}[OK] 已发送! 继续输入或者输入q退出。${NC}"
+                else
+                    # 如果adb命令失败，提醒用户
+                    echo -e "${RED}输入有误或adb命令执行失败，请检查设备连接或输入的字符。${NC}"
+                fi
             fi
         done
     else
         connect_adb
     fi
+}
+
+convert_str() {
+    local str="$1"
+    # 直接处理特殊字符，对于不确定的转义尝试去除反斜线
+    local ss=$(echo "$str" |
+        sed 's/[?]/\\\?/g' |
+        sed 's/[<]/\\</g' |
+        sed 's/[>]/\\>/g' |
+        sed 's/[|]/\\\|/g' |
+        sed 's/[~]/\\\~/g' |
+        sed 's/[\^]/\\\^/g' |
+        sed 's/  \$/$$/g' |
+        sed 's/  __/__ /g')
+    echo "$ss"
 }
 
 # 安装apk
@@ -634,22 +656,22 @@ install_youtube_firetv() {
 }
 
 # 进入tvbox安装助手
-enter_tvbox_helper(){
+enter_tvbox_helper() {
     wget -O /tmp/TVBox.json "https://github.com/wukongdaily/tvhelper/raw/master/apks/TVBox.json"
     wget -O box.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/box.sh && chmod +x box.sh && ./box.sh
 }
 
 # 进入sony电视助手
-enter_sonytv(){
+enter_sonytv() {
     wget -O sony.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/sony.sh && chmod +x sony.sh && ./sony.sh
 }
 
 # 赞助
-sponsor(){
+sponsor() {
     echo
     echo -e "${GREEN}访问赞助页面和悟空百科⬇${BLUE}"
     echo -e "${BLUE} https://bit.ly/3woDZE7 ${NC}"
-    echo 
+    echo
 }
 # 菜单
 menu_options=(
@@ -725,7 +747,6 @@ update_sh() {
     fi
 }
 
-
 # 处理菜单
 handle_choice() {
     local choice=$1
@@ -787,10 +808,10 @@ while true; do
     show_menu
     read -p "请输入选项的序号(输入q退出): " choice
     if [[ $choice == 'q' ]]; then
-            disconnect_adb
-            echo -e "${GREEN}您已退出悟空的盒子助手,下次运行 ./tv.sh 即可${NC}"
-            echo
-            break
+        disconnect_adb
+        echo -e "${GREEN}您已退出悟空的盒子助手,下次运行 ./tv.sh 即可${NC}"
+        echo
+        break
     fi
     handle_choice $choice
     echo "按任意键继续..."
