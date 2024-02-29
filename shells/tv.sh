@@ -672,8 +672,8 @@ enter_sonytv() {
 # 赞助
 sponsor() {
     if ! opkg list-installed | grep -q '^qrencode'; then
-        opkg update >/dev/null 2>&1
         echo "正在加载,请稍后..."
+        opkg update >/dev/null 2>&1
         opkg install qrencode >/dev/null 2>&1
         if [ $? -eq 0 ]; then
             echo
