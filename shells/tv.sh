@@ -143,6 +143,9 @@ modify_ntp() {
             sleep 1
         done
         adb shell reboot &
+        sleep 2  # 给点时间让重启命令发出
+        disconnect_adb 
+        exit
     else
         echo "没有检测到已连接的设备。请先连接ADB"
         connect_adb
@@ -157,7 +160,7 @@ show_timezone() {
 #断开adb连接
 disconnect_adb() {
     if check_adb_installed; then
-        adb disconnect
+        adb disconnect >/dev/null 2>&1
         echo "ADB 已经断开"
     else
         echo -e "${YELLOW}您还没有安装ADB${NC}"
