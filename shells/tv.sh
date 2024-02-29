@@ -143,8 +143,8 @@ modify_ntp() {
             sleep 1
         done
         adb shell reboot &
-        sleep 2  # 给点时间让重启命令发出
-        disconnect_adb 
+        sleep 2 # 给点时间让重启命令发出
+        disconnect_adb
         exit
     else
         echo "没有检测到已连接的设备。请先连接ADB"
@@ -671,10 +671,38 @@ enter_sonytv() {
 
 # 赞助
 sponsor() {
+    if ! opkg list-installed | grep -q '^qrencode'; then
+        opkg update >/dev/null 2>&1
+        echo "正在加载,请稍后..."
+        opkg install qrencode >/dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            echo
+        else
+            echo "qrencode安装失败。"
+        fi
+    else
+        echo
+    fi
+    echo -e "${GREEN}悟空的赞赏码如下⬇${BLUE}"
+    echo -e "${BLUE} https://imgse.com/i/pFwokKs ${NC}"
     echo
-    echo -e "${GREEN}访问赞助页面和悟空百科⬇${BLUE}"
-    echo -e "${BLUE} https://bit.ly/3woDZE7 ${NC}"
+    qrencode -t ANSIUTF8 'https://imgse.com/i/pFwokKs'
     echo
+}
+
+install_qrencode() {
+    if ! opkg list-installed | grep -q '^qrencode'; then
+        echo "请稍后..."
+        opkg update >/dev/null 2>&1
+        opkg install qrencode >/dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            echo "qrencode安装成功。"
+        else
+            echo "qrencode安装失败。"
+        fi
+    else
+        echo "qrencode已经安装。"
+    fi
 }
 # 菜单
 menu_options=(

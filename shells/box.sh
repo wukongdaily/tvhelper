@@ -246,10 +246,24 @@ install_tvbox() {
     install_apk "https://github.com/wukongdaily/tvhelper/raw/master/apks/TVBox.apk" "com.github.tvbox.osc.wk"
 }
 
+# 赞助
 sponsor() {
+    if ! opkg list-installed | grep -q '^qrencode'; then
+        echo "请稍后..."
+        opkg update >/dev/null 2>&1
+        opkg install qrencode >/dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            echo
+        else
+            echo "qrencode安装失败。"
+        fi
+    else
+        echo
+    fi
+    echo -e "${GREEN}悟空的赞赏码如下⬇${BLUE}"
+    echo -e "${BLUE} https://imgse.com/i/pFwokKs ${NC}"
     echo
-    echo -e "${GREEN}访问赞助页面和悟空百科⬇${BLUE}"
-    echo -e "${BLUE} https://bit.ly/3woDZE7 ${NC}"
+    qrencode -t ANSIUTF8 'https://imgse.com/i/pFwokKs'
     echo
 }
 

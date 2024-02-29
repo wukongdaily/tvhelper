@@ -321,11 +321,25 @@ install_kodi(){
     install_apk "https://mirror.karneval.cz/pub/xbmc/releases/android/arm/kodi-20.4-Nexus-armeabi-v7a.apk" "org.xbmc.kodi"
 }
 
-sponsor(){
+# 赞助
+sponsor() {
+    if ! opkg list-installed | grep -q '^qrencode'; then
+        echo "请稍后..."
+        opkg update >/dev/null 2>&1
+        opkg install qrencode >/dev/null 2>&1
+        if [ $? -eq 0 ]; then
+            echo
+        else
+            echo "qrencode安装失败。"
+        fi
+    else
+        echo
+    fi
+    echo -e "${GREEN}悟空的赞赏码如下⬇${BLUE}"
+    echo -e "${BLUE} https://imgse.com/i/pFwokKs ${NC}"
     echo
-    echo -e "${GREEN}访问赞助页面和悟空百科⬇${BLUE}"
-    echo -e "${BLUE} https://bit.ly/3woDZE7 ${NC}"
-    echo 
+    qrencode -t ANSIUTF8 'https://imgse.com/i/pFwokKs'
+    echo
 }
 
 # 菜单
