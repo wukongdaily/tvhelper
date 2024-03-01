@@ -677,27 +677,6 @@ enter_sonytv() {
     wget -O sony.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/sony.sh && chmod +x sony.sh && ./sony.sh
 }
 
-# 赞助
-sponsor() {
-    if ! opkg list-installed | grep -q '^qrencode'; then
-        opkg update 
-        echo -e "${GREEN}........正在加载,请稍后........${NC}"
-        opkg install qrencode >/dev/null 2>&1
-        if [ $? -eq 0 ]; then
-            echo
-        else
-            echo "qrencode安装失败。"
-        fi
-    else
-        echo
-    fi
-    echo -e "${GREEN}悟空的赞赏码如下⬇${BLUE}"
-    echo -e "${BLUE} https://imgse.com/i/pFwokKs ${NC}"
-    echo
-    qrencode -t ANSIUTF8 'https://imgse.com/i/pFwokKs'
-    echo
-}
-
 install_qrencode() {
     if ! opkg list-installed | grep -q '^qrencode'; then
         echo "请稍后..."
