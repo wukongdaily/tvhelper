@@ -1,6 +1,6 @@
 #!/bin/bash
 # wget -O sony.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/sony.sh && chmod +x sony.sh && ./sony.sh
-
+source common.sh
 #判断是否为x86软路由
 is_x86_64_router() {
     DISTRIB_ARCH=$(cat /etc/openwrt_release | grep "DISTRIB_ARCH" | cut -d "'" -f 2)
@@ -335,26 +335,6 @@ install_apk() {
     fi
 }
 
-# 赞助
-sponsor() {
-    if ! opkg list-installed | grep -q '^qrencode'; then
-        echo "请稍后..."
-        opkg update >/dev/null 2>&1
-        opkg install qrencode >/dev/null 2>&1
-        if [ $? -eq 0 ]; then
-            echo
-        else
-            echo "qrencode安装失败。"
-        fi
-    else
-        echo
-    fi
-    echo -e "${GREEN}悟空的赞赏码如下⬇${BLUE}"
-    echo -e "${BLUE} https://imgse.com/i/pFwokKs ${NC}"
-    echo
-    qrencode -t ANSIUTF8 'https://imgse.com/i/pFwokKs'
-    echo
-}
 
 # 菜单
 menu_options=(

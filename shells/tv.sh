@@ -1,5 +1,6 @@
 #!/bin/bash
 # wget -O tv.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/tv.sh && chmod +x tv.sh && ./tv.sh
+source common.sh
 SCRIPT_VERSION="2.0.3"
 #判断是否为x86软路由
 is_x86_64_router() {
