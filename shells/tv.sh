@@ -12,6 +12,13 @@ is_x86_64_router() {
     fi
 }
 
+download_common_shell() {
+    if [ ! -f common.sh ]; then
+        wget -O common.sh https://gitee.com/wukongdaily/tvhelper-docker/raw/master/shells/common.sh && chmod +x common.sh
+    fi
+}
+
+
 #********************************************************
 
 # 定义红色文本
@@ -815,6 +822,7 @@ handle_choice() {
 }
 
 show_menu() {
+    download_common_shell
     mkdir -p /tmp/upload
     clear
     echo "***********************************************************************"
