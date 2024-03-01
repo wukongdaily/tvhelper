@@ -14,7 +14,7 @@ is_x86_64_router() {
 
 download_common_shell() {
     if [ ! -f common.sh ]; then
-        wget -O common.sh https://gitee.com/wukongdaily/tvhelper-docker/raw/master/shells/common.sh && chmod +x common.sh
+        wget -O common.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/common.sh && chmod +x common.sh
     fi
 }
 
