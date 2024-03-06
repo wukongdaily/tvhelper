@@ -2,8 +2,9 @@
 
 
 
-<a href="https://github.com/wukongdaily/tvhelper">
-  <img align="center" src="https://github-readme-stats.vercel.app/api/pin/?username=wukongdaily&repo=tvhelper&theme=buefy" />
+## 另见 盒子助手Docker版本如下⬇️
+<a href="https://github.com/wukongdaily/tvhelper-docker">
+  <img align="center" src="https://github-readme-stats.vercel.app/api/pin/?username=wukongdaily&repo=tvhelper-docker&theme=buefy" />
 </a><br>
 
 # Tips：如何使用SSH
