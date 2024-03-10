@@ -1,6 +1,6 @@
 #!/bin/bash
 # wget -O tv.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/tv.sh && chmod +x tv.sh && ./tv.sh
-SCRIPT_VERSION="2.0.3"
+SCRIPT_VERSION="2.0.4"
 #判断是否为x86软路由
 is_x86_64_router() {
     DISTRIB_ARCH=$(cat /etc/openwrt_release | grep "DISTRIB_ARCH" | cut -d "'" -f 2)
@@ -32,6 +32,12 @@ BLUE="\e[96m"
 # 菜单选项数组
 declare -a menu_options
 declare -A commands
+# 安装原生tv必备菜单
+declare -a item_options
+declare -A commands_essentials
+# 替换或恢复系统桌面
+declare -a tv_model_options
+declare -A tv_model_commands
 
 show_user_tips() {
     read -p "按 Enter 键继续..."
@@ -391,6 +397,7 @@ install_subhelper_apk() {
     install_apk "https://github.com/wukongdaily/tvhelper/raw/master/apks/subhelp14.apk" "com.wukongdaily.myclashsub"
 }
 
+
 # 安装emotn store
 install_emotn_store() {
     echo -e "${BLUE}emotn_store使用指南1 前往观看:https://youtu.be/_S693NITNrs ${NC}"
@@ -696,26 +703,19 @@ menu_options=(
     "安装ADB"
     "连接ADB"
     "断开ADB"
-    "给软路由添加主机名映射(自定义挟持域名,仅限主路由模式)"
-    "一键修改电视盒子NTP服务器地址(需重启)"
-    "向TV端输入文字(限英文)"
-    "为Google TV系统安装Play商店图标"
-    "显示Netflix影片码率"
-    "模拟菜单键"
-    "安装电视订阅助手"
-    "安装Emotn Store应用商店"
     "给软路由增加Emotn Store域名"
-    "安装当贝市场"
-    "安装文件管理器+"
-    "安装Downloader"
-    "安装my-tv最新版(lizongying)"
-    "安装BBLL最新版(xiaye13579)"
+    "给软路由添加主机名映射(自定义挟持域名,仅限主路由模式)"
+    "安装Android原生TV必备精选Apps"
+    "一键修改NTP(限原生TV,需重启)"
+    "安装Play商店图标(仅google tv使用)"
     "自定义批量安装/tmp/upload目录下的所有apk"
-    "安装Mix-Apps用于显示全部应用"
+    "替换系统桌面"
     "进入KODI助手"
-    "安装Fire TV版Youtube(免谷歌框架)"
     "进入TVBox安装助手"
     "进入Sony电视助手"
+    "向TV端输入文字(限英文)"
+    "显示Netflix影片码率"
+    "模拟菜单键"
     "更新脚本"
     "赞助|打赏"
 )
@@ -724,29 +724,256 @@ commands=(
     ["安装ADB"]="install_adb"
     ["连接ADB"]="connect_adb"
     ["断开ADB"]="disconnect_adb"
-    ["一键修改电视盒子NTP服务器地址(需重启)"]="modify_ntp"
-    ["安装电视订阅助手"]="install_subhelper_apk"
-    ["安装Emotn Store应用商店"]="install_emotn_store"
     ["给软路由增加Emotn Store域名"]="add_emotn_domain"
-    ["安装当贝市场"]="install_dbmarket"
+    ["给软路由添加主机名映射(自定义挟持域名,仅限主路由模式)"]="add_dhcp_domain"
+    ["安装Android原生TV必备精选Apps"]="android_tv_essentials"
+    ["一键修改NTP(限原生TV,需重启)"]="modify_ntp"
     ["向TV端输入文字(限英文)"]="input_text"
     ["显示Netflix影片码率"]="show_nf_info"
     ["模拟菜单键"]="show_menu_keycode"
-    ["为Google TV系统安装Play商店图标"]="show_playstore_icon"
-    ["给软路由添加主机名映射(自定义挟持域名,仅限主路由模式)"]="add_dhcp_domain"
-    ["安装my-tv最新版(lizongying)"]="install_mytv_latest_apk"
-    ["安装BBLL最新版(xiaye13579)"]="install_BBLL_latest_apk"
-    ["安装文件管理器+"]="install_file_manager_plus"
-    ["安装Downloader"]="install_downloader"
+    ["安装Play商店图标(仅google tv使用)"]="show_playstore_icon"
     ["自定义批量安装/tmp/upload目录下的所有apk"]="install_all_apks"
-    ["安装Mix-Apps用于显示全部应用"]="install_mixapps"
     ["进入KODI助手"]="kodi_helper"
-    ["安装Fire TV版Youtube(免谷歌框架)"]="install_youtube_firetv"
     ["进入TVBox安装助手"]="enter_tvbox_helper"
-    ["赞助|打赏"]="sponsor"
     ["进入Sony电视助手"]="enter_sonytv"
     ["更新脚本"]="update_sh"
+    ["赞助|打赏"]="sponsor"
+    ["替换系统桌面"]="replace_system_ui_menu"
 )
+# 安装原生tv必备apps
+item_options=(
+    "安装电视订阅助手"
+    "安装Emotn Store应用商店"
+    "安装当贝市场"
+    "安装my-tv(lizongying)"
+    "安装BBLL(xiaye13579)"
+    "安装文件管理器+"
+    "安装Downloader"
+    "安装Mix-Apps用于显示全部应用"
+    "返回主菜单"
+)
+
+commands_essentials=(
+    ["安装电视订阅助手"]="install_subhelper_apk"
+    ["安装Emotn Store应用商店"]="install_emotn_store"
+    ["安装当贝市场"]="install_dbmarket"
+    ["安装my-tv(lizongying)"]="install_mytv_latest_apk"
+    ["安装BBLL(xiaye13579)"]="install_BBLL_latest_apk"
+    ["安装文件管理器+"]="install_file_manager_plus"
+    ["安装Downloader"]="install_downloader"
+    ["安装Mix-Apps用于显示全部应用"]="install_mixapps"
+)
+
+# 替换或恢复系统桌面
+tv_model_options=(
+    "替换/恢复 索尼Sony电视系统桌面"
+    "替换/恢复 小米(盒子/电视)系统桌面"
+    "替换/恢复 小米盒子国际版系统桌面"
+    "替换/恢复 GoogleTV系统桌面"
+    "替换/恢复 安卓原生TV系统桌面(原生类型TV通用)"
+    "返回主菜单"
+)
+
+tv_model_commands=(
+    ["替换/恢复 索尼Sony电视系统桌面"]="replace_sony_ui"
+    ["替换/恢复 小米(盒子/电视)系统桌面"]="replace_xiaomi_ui"
+    ["替换/恢复 小米盒子国际版系统桌面"]="replace_xiaomi_global_ui"
+    ["替换/恢复 GoogleTV系统桌面"]="toggle_googletv_system_ui"
+    ["替换/恢复 安卓原生TV系统桌面(原生类型TV通用)"]="replace_normal_androidtv_ui"
+)
+
+# 定义安卓原生TV必备子菜单函数
+android_tv_essentials() {
+    while true; do
+        echo -e "${GREEN}原生TV必备精选Apps:${NC}"
+        for i in "${!item_options[@]}"; do
+            echo "    ($((i + 1))) ${item_options[$i]}"
+        done
+
+        echo "请选择一个选项,或按q返回主菜单:"
+        read -r choice
+
+        # 检查输入是否为退出命令
+        if [[ "$choice" == "q" ]]; then
+            break
+        fi
+
+        # 检查输入是否为数字
+        if ! [[ $choice =~ ^[0-9]+$ ]]; then
+            echo -e "    ${RED}请输入有效数字!${NC}"
+            continue
+        fi
+
+        # 检查数字是否在有效范围内
+        if [[ $choice -lt 1 ]] || [[ $choice -gt ${#item_options[@]} ]]; then
+            echo -e "    ${RED}选项超出范围!${NC}"
+            echo -e "    ${YELLOW}请输入 1 到 ${#item_options[@]} 之间的数字。${NC}"
+            continue
+        fi
+
+        # 处理返回主菜单
+        if [[ $choice -eq ${#item_options[@]} ]]; then
+            break
+        fi
+
+        local selected_option="${item_options[$((choice - 1))]}"
+        command_item_run="${commands_essentials["$selected_option"]}"
+
+        # 检查是否存在对应的命令并执行
+        if [ -z "$command_item_run" ]; then
+            echo -e "    ${RED}无效选项,请重新选择。${NC}"
+        else
+            eval "$command_item_run"
+        fi
+    done
+}
+
+# 根据品牌替换系统桌面
+replace_system_ui_menu() {
+    while true; do
+        echo -e "${GREEN}目前支持替换桌面的电视盒子或电视品牌如下:${NC}"
+        for i in "${!tv_model_options[@]}"; do
+            echo "    ($((i + 1))) ${tv_model_options[$i]}"
+        done
+
+        echo "请选择一个选项,或按q返回主菜单:"
+        read -r choice
+
+        # 检查输入是否为退出命令
+        if [[ "$choice" == "q" ]]; then
+            break
+        fi
+
+        # 检查输入是否为数字
+        if ! [[ $choice =~ ^[0-9]+$ ]]; then
+            echo -e "    ${RED}请输入有效数字!${NC}"
+            continue
+        fi
+
+        # 检查数字是否在有效范围内
+        if [[ $choice -lt 1 ]] || [[ $choice -gt ${#tv_model_options[@]} ]]; then
+            echo -e "    ${RED}选项超出范围!${NC}"
+            echo -e "    ${YELLOW}请输入 1 到 ${#tv_model_options[@]} 之间的数字。${NC}"
+            continue
+        fi
+
+        # 处理返回主菜单
+        if [[ $choice -eq ${#tv_model_options[@]} ]]; then
+            break
+        fi
+
+        local selected_option="${tv_model_options[$((choice - 1))]}"
+        local command_item_run="${tv_model_commands["$selected_option"]}"
+
+        # 检查是否存在对应的命令并执行
+        if [ -z "$command_item_run" ]; then
+            echo -e "    ${RED}无效选项,请重新选择。${NC}"
+        else
+            eval "$command_item_run"
+        fi
+    done
+}
+
+replace_xiaomi_ui() {
+    local system_ui_package="com.mitv.tvhome"
+    toggle_system_ui "${system_ui_package}"
+}
+
+replace_xiaomi_global_ui() {
+    local system_ui_package="com.google.android.tvlauncher"
+    toggle_system_ui "${system_ui_package}"
+}
+
+replace_sony_ui() {
+    local system_ui_package="com.dangbei.TVHomeLauncher"
+    toggle_system_ui "${system_ui_package}"
+}
+
+replace_xiaomi_global_ui() {
+    replace_normal_androidtv_ui
+}
+
+replace_normal_androidtv_ui() {
+    local system_ui_package="com.google.android.tvlauncher"
+    toggle_system_ui "${system_ui_package}"
+}
+
+
+
+check_emotnui_installed(){
+    local package_name="com.oversea.aslauncher"
+    local apk_path="/tmp/ui.apk"
+    # 检查 com.oversea.aslauncher 是否已安装
+    if ! adb shell pm list packages | grep -q "$package_name"; then
+        echo -e "${GREEN}EmotnUI 未安装,开始安装...请稍后${NC}"
+        echo -e "${BLUE}正在安装第三方桌面...${NC}"
+        install_apk "https://github.com/wukongdaily/tvhelper/raw/master/apks/ui.apk" "com.oversea.aslauncher"
+        # 再次检查ui是否安装成功,不成功则return
+        if ! adb shell pm list packages | grep -q "$package_name"; then
+            echo -e "${GREEN}EmotnUI 未能安装成功,请调整网络后重试${NC}"
+            return
+        else
+            echo -e "${GREEN}...第三方桌面EmotnUI已安装。${NC}"
+        fi
+    else
+        echo -e "${GREEN}第三方桌面EmotnUI已安装。${NC}"
+    fi
+}
+
+toggle_googletv_system_ui() {
+    local system_ui_package="com.google.android.apps.tv.launcherx"
+    local system_setup_package="com.google.android.tungsten.setupwraith"
+    #判断emotnui是否安装 
+    check_emotnui_installed
+
+    # 检查系统桌面是否已被禁用
+    if adb shell pm list packages -d | grep -q "$system_ui_package"; then
+        # 若已被禁用，则启用系统桌面
+        if adb shell pm enable "$system_ui_package" >/dev/null 2>&1 && adb shell pm enable "$system_setup_package" >/dev/null 2>&1; then
+            echo -e "${GREEN}恭喜您,您的系统桌面又回来啦! 请按HOME键确认。${NC}"
+            adb shell input keyevent KEYCODE_HOME
+        else
+            echo -e "${RED}启用系统桌面或其他应用失败，请检查设备连接状态和权限。${NC}"
+        fi
+
+    else
+        # 若未被禁用，则禁用系统桌面
+        if adb shell pm disable-user --user 0 "$system_ui_package" >/dev/null 2>&1 &&
+            adb shell pm disable-user --user 0 "$system_setup_package" >/dev/null 2>&1; then
+            echo -e "${GREEN}恭喜您,新桌面替换成功。点击HOME键 查看新桌面哦。${NC}"
+            adb shell input keyevent KEYCODE_HOME
+        else
+            echo -e "${RED}禁用系统桌面失败，请检查设备连接状态和权限。${NC}"
+        fi
+
+    fi
+}
+
+# 替换或恢复系统桌面
+toggle_system_ui() {
+    local system_ui_package=$1
+    #判断emotnui是否安装 
+    check_emotnui_installed
+
+    # 检查系统桌面是否已被禁用
+    if adb shell pm list packages -d | grep -q "$system_ui_package"; then
+        # 若已被禁用，则启用系统桌面
+        if adb shell pm enable "$system_ui_package" >/dev/null 2>&1; then
+            echo -e "${GREEN}恭喜您,您的系统桌面又回来啦! 请按HOME键确认。${NC}"
+            adb shell input keyevent KEYCODE_HOME
+        else
+            echo -e "${RED}启用系统桌面失败，请检查设备连接状态和权限。${NC}"
+        fi
+    else
+        # 若未被禁用，则禁用系统桌面
+        if adb shell pm disable-user --user 0 "$system_ui_package" >/dev/null 2>&1; then
+            echo -e "${GREEN}恭喜您,新桌面替换成功。点击HOME键 查看新桌面哦。${NC}"
+            adb shell input keyevent KEYCODE_HOME
+        else
+            echo -e "${RED}禁用系统桌面失败，请检查设备连接状态和权限。${NC}"
+        fi
+    fi
+}
 
 update_sh() {
     break
@@ -764,7 +991,6 @@ update_sh() {
         echo "更新失败。"
     fi
 }
-
 # 处理菜单
 handle_choice() {
     local choice=$1
