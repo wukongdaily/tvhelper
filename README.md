@@ -29,13 +29,15 @@ wget -O env.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/she
 > 本套脚本是为了更好的解决原生TV水土不服问题，所以默认我会觉得你的软路由肯定具备科学上网能力。如果上述脚本在下载过程遇到诸如443等提示信息，代表下载失败。
 > 请您自行检查代理问题。包括不限于代理模式？更换节点等操作。
 > 如果非得在普通非科学的openwrt环境里使用 也不是不行。那就在https地址前面在加入代理吧
-
-```bash
-wget -O env.sh https://mirror.ghproxy.com/https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/env.sh && chmod +x env.sh && ./env.sh proxy
-```
+### 代理模式请调用如下命令
 ```bash
 wget -O tv.sh https://mirror.ghproxy.com/https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/tv.sh && chmod +x tv.sh && ./tv.sh proxy
 ```
+### 若路由器不带bash环境 则调用
+```bash
+wget -O env.sh https://mirror.ghproxy.com/https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/env.sh && chmod +x env.sh && ./env.sh proxy
+```
+
 # 辅助视频教程
 [最终效果展示 短视频](https://www.douyin.com/user/MS4wLjABAAAAte1MKVdw9wFvosRL1m6jRA-zvV1PAQLR6zOnuK03h28?modal_id=7337473840903245097)<br><br>
 [在线教学视频 长视频](https://www.youtube.com/watch?v=_HENSyrvQRY)
