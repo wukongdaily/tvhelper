@@ -1,6 +1,10 @@
 #!/bin/bash
 # wget -O kodi.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/kodi.sh && chmod +x kodi.sh && ./kodi.sh
 source common.sh
+proxy=""
+if [ $# -gt 0 ]; then
+  proxy="https://mirror.ghproxy.com/"
+fi
 #判断是否为x86软路由
 is_x86_64_router() {
     DISTRIB_ARCH=$(cat /etc/openwrt_release | grep "DISTRIB_ARCH" | cut -d "'" -f 2)
@@ -245,7 +249,7 @@ set_kodi_to_chinese() {
     mkdir -p "$TEMP_DIR"
 
     echo -e "${GREEN}下载中文语言包...${NC}"
-    wget -O /tmp/resource.language.zh_cn.zip "$LANGUAGE_PACK_URL"
+    wget -O /tmp/resource.language.zh_cn.zip "${proxy}$LANGUAGE_PACK_URL"
 
     echo -e "${GREEN}解压中文语言包到本地临时目录...${NC}"
     unzip -o /tmp/resource.language.zh_cn.zip -d "$TEMP_DIR"

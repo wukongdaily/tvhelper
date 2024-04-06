@@ -1,7 +1,10 @@
 #!/bin/bash
 # wget -O tv.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/tv.sh && chmod +x tv.sh && ./tv.sh
-SCRIPT_VERSION="2.0.4"
 #判断是否为x86软路由
+proxy=""
+if [ $# -gt 0 ]; then
+	proxy="https://mirror.ghproxy.com/"
+fi
 is_x86_64_router() {
     DISTRIB_ARCH=$(cat /etc/openwrt_release | grep "DISTRIB_ARCH" | cut -d "'" -f 2)
     if [ "$DISTRIB_ARCH" = "x86_64" ]; then
@@ -13,7 +16,7 @@ is_x86_64_router() {
 
 download_common_shell() {
     if [ ! -f common.sh ]; then
-        wget -O common.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/common.sh && chmod +x common.sh
+        wget -O common.sh "${proxy}https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/common.sh" && chmod +x common.sh
     fi
     source common.sh
 }
@@ -304,7 +307,7 @@ install_apk() {
     local package_name=$2
     local filename=$(basename "$apk_download_url")
     # 下载APK文件到临时目录
-    wget -O /tmp/$filename "$apk_download_url"
+    wget -O /tmp/$filename "${proxy}$apk_download_url"
     if check_adb_connected; then
         # 卸载旧版本的APK（如果存在）
         adb uninstall "$package_name" >/dev/null 2>&1
@@ -623,7 +626,7 @@ install_mixapps() {
     local xapk_download_url="https://github.com/wukongdaily/tvhelper/raw/master/apks/mix.xapk"
     local xapkname=$(basename "$xapk_download_url")
     local xapk_file="/tmp/$xapkname"
-    wget -O "$xapk_file" "$xapk_download_url"
+    wget -O "$xapk_file" "${proxy}$xapk_download_url"
     local extract_to="/tmp/mix/"
     mkdir -p "$extract_to"
     if unzip -o "$xapk_file" -d "$extract_to"; then
@@ -664,7 +667,7 @@ install_mixapps() {
 }
 # 进入KODI助手
 kodi_helper() {
-    wget -O kodi.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/kodi.sh && chmod +x kodi.sh && ./kodi.sh
+    wget -O kodi.sh "${proxy}https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/kodi.sh" && chmod +x kodi.sh && ./kodi.sh ${proxy}
 }
 
 # 安装fire tv版本youtube
@@ -675,13 +678,13 @@ install_youtube_firetv() {
 
 # 进入tvbox安装助手
 enter_tvbox_helper() {
-    wget -O /tmp/TVBox.json "https://github.com/wukongdaily/tvhelper/raw/master/apks/TVBox.json"
-    wget -O box.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/box.sh && chmod +x box.sh && ./box.sh
+    wget -O /tmp/TVBox.json "${proxy}https://github.com/wukongdaily/tvhelper/raw/master/apks/TVBox.json"
+    wget -O box.sh "${proxy}https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/box.sh" && chmod +x box.sh && ./box.sh ${proxy}
 }
 
 # 进入sony电视助手
 enter_sonytv() {
-    wget -O sony.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/sony.sh && chmod +x sony.sh && ./sony.sh
+    wget -O sony.sh "${proxy}https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/sony.sh" && chmod +x sony.sh && ./sony.sh ${proxy}
 }
 
 install_qrencode() {
@@ -976,17 +979,16 @@ toggle_system_ui() {
 }
 
 update_sh() {
-    break
     echo "正在更新脚本..."
     # 下载最新的脚本到临时文件
-    wget -O /tmp/script.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/tv.sh
+    wget -O /tmp/script.sh "${proxy}https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/tv.sh"
     # 替换当前脚本
     if [ -f /tmp/script.sh ]; then
         chmod +x /tmp/script.sh
         cp /tmp/script.sh /tv.sh
         echo "脚本更新成功。即将重新启动脚本。"
         # 使用 exec 来重新启动脚本，替换当前进程
-        exec /tv.sh
+        exec /tv.sh ${proxy}
     else
         echo "更新失败。"
     fi
@@ -1054,7 +1056,7 @@ while true; do
     read -p "请输入选项的序号(输入q退出): " choice
     if [[ $choice == 'q' ]]; then
         disconnect_adb
-        echo -e "${GREEN}您已退出悟空的盒子助手,下次运行 ./tv.sh 即可${NC}"
+        echo -e "${GREEN}您已退出悟空的盒子助手,下次运行 ./tv.sh 即可 或者运行 ./tv.sh proxy${NC}"
         echo
         break
     fi

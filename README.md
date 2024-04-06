@@ -31,10 +31,10 @@ wget -O env.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/she
 > 如果非得在普通非科学的openwrt环境里使用 也不是不行。那就在https地址前面在加入代理吧
 
 ```bash
-wget -O env.sh https://mirror.ghproxy.com/https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/env.sh && chmod +x env.sh && ./env.sh
+wget -O env.sh https://mirror.ghproxy.com/https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/env.sh && chmod +x env.sh && ./env.sh proxy
 ```
 ```bash
-wget -O tv.sh https://mirror.ghproxy.com/https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/tv.sh && chmod +x tv.sh && ./tv.sh
+wget -O tv.sh https://mirror.ghproxy.com/https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/tv.sh && chmod +x tv.sh && ./tv.sh proxy
 ```
 # 辅助视频教程
 [最终效果展示 短视频](https://www.douyin.com/user/MS4wLjABAAAAte1MKVdw9wFvosRL1m6jRA-zvV1PAQLR6zOnuK03h28?modal_id=7337473840903245097)<br><br>

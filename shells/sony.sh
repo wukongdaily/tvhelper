@@ -1,6 +1,10 @@
 #!/bin/bash
 # wget -O sony.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/sony.sh && chmod +x sony.sh && ./sony.sh
 source common.sh
+proxy=""
+if [ $# -gt 0 ]; then
+  proxy="https://mirror.ghproxy.com/"
+fi
 #判断是否为x86软路由
 is_x86_64_router() {
     DISTRIB_ARCH=$(cat /etc/openwrt_release | grep "DISTRIB_ARCH" | cut -d "'" -f 2)
@@ -259,7 +263,7 @@ download_apk(){
     local filename=$(basename "$apk_download_url")
     # 下载APK文件到临时目录
     mkdir -p "/tmp/${app_name_dir}"
-    wget -O "/tmp/${app_name_dir}/${filename}" "$apk_download_url"
+    wget -O "/tmp/${app_name_dir}/${filename}" "${proxy}$apk_download_url"
 }
 
 # 根据文件夹名称,安装文件夹中全部apk
@@ -302,7 +306,7 @@ install_apk() {
     local apk_download_url=$1
     local filename=$(basename "$apk_download_url")
     # 下载APK文件到临时目录
-    wget -O /tmp/$filename "$apk_download_url"
+    wget -O /tmp/$filename "${proxy}$apk_download_url"
     if check_adb_connected; then
         echo -e "${GREEN}正在推送和安装apk,请耐心等待...${NC}"
 

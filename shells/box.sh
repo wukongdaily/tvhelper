@@ -1,6 +1,10 @@
 #!/bin/bash
 # wget -O box.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/box.sh && chmod +x box.sh && ./box.sh
 source common.sh
+proxy=""
+if [ $# -gt 0 ]; then
+	proxy="https://mirror.ghproxy.com/"
+fi
 #判断是否为x86软路由
 is_x86_64_router() {
     DISTRIB_ARCH=$(cat /etc/openwrt_release | grep "DISTRIB_ARCH" | cut -d "'" -f 2)
@@ -206,7 +210,7 @@ install_apk() {
     local package_name=$2
     local filename=$(basename "$apk_download_url")
     # 下载APK文件到临时目录
-    wget -O /tmp/$filename "$apk_download_url"
+    wget -O /tmp/$filename "${proxy}$apk_download_url"
     if check_adb_connected; then
         # 卸载旧版本的APK（如果存在）
         adb uninstall "$package_name" >/dev/null 2>&1
@@ -317,7 +321,7 @@ initEnv() {
     else
         # 如果文件不存在就下载
         echo -e "${RED}Error: JSON file does not exist.${NC}"
-        wget -O /tmp/TVBox.json "https://github.com/wukongdaily/tvhelper/raw/master/apks/TVBox.json"
+        wget -O /tmp/TVBox.json "${proxy}https://github.com/wukongdaily/tvhelper/raw/master/apks/TVBox.json"
         versionName=$(jq -r '.elements[0].versionName' "$json_file")
     fi
 }
