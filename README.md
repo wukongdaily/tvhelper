@@ -16,8 +16,6 @@ https://github.com/wukongdaily/HowToUseSSH
 
 ```
 wget -O tv.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/tv.sh && chmod +x tv.sh && ./tv.sh
-
-
 ```
 ### 不带Bash环境的 用下列命令
 <img alt="Static Badge" src="https://img.shields.io/badge/sh-0?style=flat-square&logoColor=8A2BE2&label=%E7%8E%AF%E5%A2%83&labelColor=000000&color=009100"> <img alt="Static Badge" src="https://img.shields.io/badge/MT3000-0?style=flat-square&logoColor=8A2BE2&label=%E5%9E%8B%E5%8F%B7&labelColor=000000&color=2828FF"> <img alt="Static Badge" src="https://img.shields.io/badge/MT2500A-0?style=flat-square&logoColor=8A2BE2&label=%E5%9E%8B%E5%8F%B7&labelColor=000000&color=D94600"> <img alt="Static Badge" src="https://img.shields.io/badge/MT6000-0?style=flat-square&logoColor=8A2BE2&label=%E5%9E%8B%E5%8F%B7&labelColor=000000&color=336666">
@@ -27,10 +25,17 @@ wget -O tv.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shel
 
 ```
 wget -O env.sh https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/env.sh && chmod +x env.sh && ./env.sh
-
-
 ```
+> 本套脚本是为了更好的解决原生TV水土不服问题，所以默认我会觉得你的软路由肯定具备科学上网能力。如果上述脚本在下载过程遇到诸如443等提示信息，代表下载失败。
+> 请您自行检查代理问题。包括不限于代理模式？更换节点等操作。
+> 如果非得在普通非科学的openwrt环境里使用 也不是不行。那就在https地址前面在加入代理吧
 
+```bash
+wget -O env.sh https://mirror.ghproxy.com/https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/env.sh && chmod +x env.sh && ./env.sh
+```
+```bash
+wget -O tv.sh https://mirror.ghproxy.com/https://raw.githubusercontent.com/wukongdaily/tvhelper/master/shells/tv.sh && chmod +x tv.sh && ./tv.sh
+```
 # 辅助视频教程
 [最终效果展示 短视频](https://www.douyin.com/user/MS4wLjABAAAAte1MKVdw9wFvosRL1m6jRA-zvV1PAQLR6zOnuK03h28?modal_id=7337473840903245097)<br><br>
 [在线教学视频 长视频](https://www.youtube.com/watch?v=_HENSyrvQRY)
