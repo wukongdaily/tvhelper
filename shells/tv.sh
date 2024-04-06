@@ -1028,12 +1028,21 @@ handle_choice() {
     eval "$command_to_run"
 }
 
+get_script_mode(){
+    if [ -n "$proxy" ]; then
+        echo -e " 代理模式"
+    else
+        echo -e ""
+    fi
+}
+
+
 show_menu() {
     download_common_shell
     mkdir -p /tmp/upload
     clear
     echo "***********************************************************************"
-    echo -e "*      ${YELLOW}盒子助手OP版 当前版本:v${SCRIPT_VERSION}${NC}        "
+    echo -e "*      ${YELLOW}盒子助手OP版 当前版本:v${SCRIPT_VERSION}$(get_script_mode)${NC}        "
     echo -e "*      ${GREEN}专治安卓原生TV盒子在大陆使用的各种水土不服${NC}         "
     echo -e "*      ${RED}请确保电视盒子和OpenWrt路由器处于${NC}${BLUE}同一网段${NC}\n*      ${RED}且电视盒子开启了${NC}${BLUE}USB调试模式(adb开关)${NC}         "
     echo "*      Developed by @wukongdaily        "
