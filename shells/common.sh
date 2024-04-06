@@ -10,6 +10,7 @@ BLUE="\e[96m"
 if [ -z "$_COMMON_SH_SOURCED" ]; then
     # 标志变量，表示 common.sh 尚未被 source
     _COMMON_SH_SOURCED=1
+    SCRIPT_VERSION="2.0.5"
 
     # 将您的环境变量设置、函数定义等放在这里
     # 赞助
