@@ -347,7 +347,7 @@ menu_options=(
     "断开ADB"
     "安装Netflix最新版 10.3.1"
     "安装Apple TV+最新版 14.1.0"
-    "安装Disney+最新版 3.0.0-rc3"
+    "安装Disney+最新版 3.1.3-rc1"
     "安装HBO GO最新版 r90.v1.0.206.04"
     "安装myTVSuper最新版 1.8.2"
     "安装Youtube-FireTV版"
