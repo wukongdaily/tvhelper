@@ -349,7 +349,7 @@ menu_options=(
     "安装Apple TV+最新版 14.2.0"
     "安装Disney+最新版 3.1.3-rc1"
     "安装HBO GO最新版 r90.v1.0.206.04"
-    "安装myTVSuper最新版 1.8.2"
+    "安装myTVSuper最新版 2.0.1"
     "安装Youtube-FireTV版"
     "赞助|打赏"
 )
@@ -362,7 +362,7 @@ commands=(
     ["安装Apple TV+最新版 14.2.0"]="install_appletv"
     ["安装Disney+最新版 3.1.3-rc1"]="install_disney"
     ["安装HBO GO最新版 r90.v1.0.206.04"]="install_hbogo"
-    ["安装myTVSuper最新版 1.8.2"]="install_mytvsuper"
+    ["安装myTVSuper最新版 2.0.1"]="install_mytvsuper"
     ["安装Youtube-FireTV版"]="install_youtube"
     ["赞助|打赏"]="sponsor"
 )
