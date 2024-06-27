@@ -424,8 +424,10 @@ show_playstore_icon() {
 # 安装my-tv
 # release地址、包名、apk命名前缀
 install_mytv_latest_apk() {
-    echo -e "${BLUE}项目主页:https://github.com/lizongying/my-tv ${NC}"
-    install_apk_by_url "https://github.com/lizongying/my-tv/releases/latest" "com.lizongying.mytv" "my-tv-"
+    echo -e "${BLUE}APK下载地址: https://wwl.lanzouq.com/wkmytv ${NC}"
+    echo -e "${BLUE}请暂时手动下载 然后传入软路由/tmp/upload 再执行主菜单第9项来安装 ${NC}"
+    echo -e "${BLUE}请牢记上述固定下载地址 便于以后更新 ${NC}"
+    #install_apk_by_url "https://github.com/lizongying/my-tv/releases/latest" "com.lizongying.mytv" "my-tv-"
 }
 
 # 安装bbll
