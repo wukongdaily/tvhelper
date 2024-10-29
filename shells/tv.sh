@@ -425,10 +425,8 @@ show_playstore_icon() {
 # release地址、包名、apk命名前缀
 install_mytv_latest_apk() {
     echo -e "${BLUE}APK下载地址: https://wwl.lanzouq.com/wkmytv ${NC}"
-    echo -e "${YELLOW}请暂时手动下载 然后传入软路由/tmp/upload 再执行主菜单第9项来安装 ${NC}"
-    echo -e "${BLUE}建议在盒子上手动卸载老版本,然后在安装新版本,避免覆盖不成功 ${NC}"
-    echo -e "${BLUE}请牢记上述固定下载地址 便于以后更新 ${NC}"
-    #install_apk_by_url "https://github.com/lizongying/my-tv/releases/latest" "com.lizongying.mytv" "my-tv-"
+    echo -e "${YELLOW}项目地址:https://github.com/yaoxieyoulei/mytv-android/ ${NC}"
+    install_apk "https://github.com/yaoxieyoulei/mytv-android/releases/download/tv2.2.4/mytv-android-tv-2.2.4-all-sdk21.apk" "top.yogiczy.mytv"
 }
 
 # 安装bbll
