@@ -749,7 +749,7 @@ item_options=(
     "安装电视订阅助手"
     "安装Emotn Store应用商店"
     "安装当贝市场"
-    "安装my-tv(lizongying)"
+    "安装my-tv(yaoxieyoulei)"
     "安装BBLL(xiaye13579)"
     "安装文件管理器+"
     "安装Downloader"
