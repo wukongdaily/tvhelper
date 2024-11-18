@@ -46,8 +46,8 @@ wget -O env.sh https://mirror.ghproxy.com/https://raw.githubusercontent.com/wuko
 
 # 鸣谢的项目
 ### my-tv
-https://github.com/lizongying/my-tv
-> 暂时能用的版本：https://wwl.lanzouq.com/wkmytv
+https://github.com/yaoxieyoulei/mytv-android
+> 能用的版本：https://wwyc.lanzouq.com/mmtv
 ### BBLL
 https://github.com/xiaye13579/BBLL
 ### TVBox
